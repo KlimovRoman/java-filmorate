@@ -2,13 +2,12 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,7 +56,7 @@ public class FilmController {
                 log.info("Обновлен фильм с id=" + id);
             } else {
                 log.error("Фильм не найден");
-                throw new FilmNotFoundException("Фильм не найден");
+                throw new EntityNotFoundException("Фильм не найден");
             }
         } else {
             log.error("Валидация не пройдена при обновлении фильма");

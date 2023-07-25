@@ -2,15 +2,12 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Email;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,7 +67,7 @@ public class UserController {
                 log.info("Обновлен юзер с id=" + id);
             } else {
                 log.error("пользователь не найден!");
-                throw new UserNotFoundException("пользователь не найден!");
+                throw new EntityNotFoundException("пользователь не найден!");
             }
         } else {
             log.error("Ошибка валидации юзер не обновлен");
