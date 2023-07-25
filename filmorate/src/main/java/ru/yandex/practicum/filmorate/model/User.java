@@ -19,6 +19,7 @@ public class User {
     private String birthday;
 
     public User() {
+        
     }
 
     public User(int id) {
