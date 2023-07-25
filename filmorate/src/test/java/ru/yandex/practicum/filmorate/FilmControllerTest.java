@@ -1,10 +1,6 @@
 package ru.yandex.practicum.filmorate;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -47,6 +43,4 @@ public class FilmControllerTest {
     void durationValidTest(){
 
     }
-
-
 }
