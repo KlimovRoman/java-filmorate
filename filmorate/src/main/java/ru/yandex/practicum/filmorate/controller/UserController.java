@@ -28,8 +28,8 @@ public class UserController {
                         birthValid(userToAdd)) {
             userIdCounter++;
             User newUser = new User(userIdCounter);
-            if(userToAdd.getName() == null || userToAdd.getName().equals("null") || userToAdd.getName().isEmpty() ||
-                                                      userToAdd.getName().isBlank()){
+            if (userToAdd.getName() == null || userToAdd.getName().equals("null") || userToAdd.getName().isEmpty() ||
+                                                      userToAdd.getName().isBlank()) {
                 newUser.setName(userToAdd.getLogin());
             } else {
                 newUser.setName(userToAdd.getName());
@@ -84,7 +84,7 @@ public class UserController {
     // методы для валидации
 
     private boolean emailValid(User user) {
-        if (user.getEmail()!=null && !user.getEmail().isBlank() &&
+        if (user.getEmail() != null && !user.getEmail().isBlank() &&
                 !user.getEmail().isEmpty() && user.getEmail().contains("@")) {
             return true;
         } else {
@@ -96,7 +96,7 @@ public class UserController {
 
 
     private boolean loginValid(User user) {
-        if (user.getLogin()!=null && !user.getLogin().isBlank() &&
+        if (user.getLogin() != null && !user.getLogin().isBlank() &&
                 !user.getLogin().isEmpty() && !user.getLogin().contains(" ")) {
             return true;
         } else {
