@@ -72,8 +72,8 @@ public class FilmController {
 
     // методы для валидации
 
-    private boolean nameIsEmptyValid (Film filmToCheck) {
-        if (filmToCheck.getName()!=null && !filmToCheck.getName().isBlank() && !filmToCheck.getName().isEmpty()) {
+    private boolean nameIsEmptyValid(Film filmToCheck) {
+        if (filmToCheck.getName() != null && !filmToCheck.getName().isBlank() && !filmToCheck.getName().isEmpty()) {
             return true;
         } else {
             log.error("Валидация не пройдена, имя пустое");
@@ -81,7 +81,7 @@ public class FilmController {
         }
     }
 
-    private boolean descLen200Valid (Film filmToCheck) {
+    private boolean descLen200Valid(Film filmToCheck) {
         if (filmToCheck.getDescription().length() <= 200) {
             return true;
         } else {
@@ -90,7 +90,7 @@ public class FilmController {
         }
     }
 
-    private boolean releaseDateValid (Film filmToCheck) {
+    private boolean releaseDateValid(Film filmToCheck) {
         LocalDate dateToCheck = LocalDate.parse(filmToCheck.getReleaseDate(),formatter);
         LocalDate dateForCompare =  LocalDate.parse("1895-12-28",formatter);
         if (dateToCheck.isAfter(dateForCompare)) {
@@ -101,7 +101,7 @@ public class FilmController {
         }
     }
 
-    private boolean durationValid (Film filmToCheck) {
+    private boolean durationValid(Film filmToCheck) {
         if (filmToCheck.getDuration() > 0) {
             return true;
         } else {
