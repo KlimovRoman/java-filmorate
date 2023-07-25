@@ -19,12 +19,10 @@ public class Film {
     private String releaseDate;
     @Positive
     private Double duration;
-    public Film(int id){
+
+    public Film(int id) {
         this.id = id;
     }
-    public Film(){
-
+    public Film() {
     }
-
 }
-
