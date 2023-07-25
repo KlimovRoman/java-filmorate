@@ -23,8 +23,8 @@ public class UserController {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @PostMapping
-    public void addUser (@Valid @RequestBody User userToAdd){
-        if(emailValid(userToAdd) && loginValid(userToAdd) &&
+    public void addUser(@Valid @RequestBody User userToAdd) {
+        if (emailValid(userToAdd) && loginValid(userToAdd) &&
                         birthValid(userToAdd)) {
             userIdCounter++;
             User newUser = new User(userIdCounter);
@@ -47,17 +47,17 @@ public class UserController {
     }
 
     @PutMapping
-    public void updUser (@Valid @RequestBody User userToUpd){
+    public void updUser(@Valid @RequestBody User userToUpd) {
 
-        if(emailValid(userToUpd) && loginValid(userToUpd) &&
+        if (emailValid(userToUpd) && loginValid(userToUpd) &&
                                 birthValid(userToUpd)) {
 
             final int id = userToUpd.getId();
-            if(users.containsKey(id)){
+            if (users.containsKey(id)) {
                 User userFromHash = users.get(id);
                 userFromHash.setBirthday(userToUpd.getBirthday());
-                if(userToUpd.getName() == null || userToUpd.getName().equals("null") ||
-                        userToUpd.getName().isEmpty() || userToUpd.getName().isBlank()){
+                if (userToUpd.getName() == null || userToUpd.getName().equals("null") ||
+                        userToUpd.getName().isEmpty() || userToUpd.getName().isBlank()) {
                     userFromHash.setName(userToUpd.getLogin());
                 } else {
                     userFromHash.setName(userToUpd.getName());
@@ -76,18 +76,18 @@ public class UserController {
     }
 
     @GetMapping
-    public List<User> getAllUsers (){
+    public List<User> getAllUsers() {
     return new ArrayList<>(users.values());
     }
 
 
     // методы для валидации
 
-    private boolean emailValid(User user){
+    private boolean emailValid(User user) {
         if (user.getEmail()!=null && !user.getEmail().isBlank() &&
-                !user.getEmail().isEmpty() && user.getEmail().contains("@")){
+                !user.getEmail().isEmpty() && user.getEmail().contains("@")) {
             return true;
-        }else {
+        } else {
             log.error("Валидация не пройдена, email неверный");
             return false;
         }
@@ -95,20 +95,20 @@ public class UserController {
     }
 
 
-    private boolean loginValid (User user){
+    private boolean loginValid(User user) {
         if (user.getLogin()!=null && !user.getLogin().isBlank() &&
-                !user.getLogin().isEmpty() && !user.getLogin().contains(" ")){
+                !user.getLogin().isEmpty() && !user.getLogin().contains(" ")) {
             return true;
-        }else {
+        } else {
             log.error("Валидация не пройдена, login пустой");
             return false;
         }
     }
 
-    private boolean birthValid (User user) {
+    private boolean birthValid(User user) {
         LocalDate dateToCheck = LocalDate.parse(user.getBirthday(),formatter);
         LocalDate dateForCompare =  LocalDate.now();
-        if(dateToCheck.isBefore(dateForCompare)){
+        if (dateToCheck.isBefore(dateForCompare)) {
             return true;
         } else {
             log.error("Валидация не пройдена, неверная дата рождения");
