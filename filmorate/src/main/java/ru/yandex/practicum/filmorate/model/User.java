@@ -18,10 +18,10 @@ public class User {
     @PastOrPresent
     private String birthday;
 
-    public User(){
-
+    public User() {
     }
-    public User(int id){
+
+    public User(int id) {
         this.id = id;
     }
 }
