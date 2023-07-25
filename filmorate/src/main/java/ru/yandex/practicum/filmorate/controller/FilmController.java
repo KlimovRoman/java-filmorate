@@ -22,7 +22,7 @@ public class FilmController {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @PostMapping
-    public void addFilm (@Valid @RequestBody Film filmToAdd) {
+    public void addFilm(@Valid @RequestBody Film filmToAdd) {
 
         if (nameIsEmptyValid(filmToAdd) && descLen200Valid(filmToAdd) &&
                                     releaseDateValid(filmToAdd) && durationValid(filmToAdd)) {
@@ -41,7 +41,7 @@ public class FilmController {
     }
 
     @PutMapping
-    public void updFilm (@Valid @RequestBody Film filmToUpd) {
+    public void updFilm(@Valid @RequestBody Film filmToUpd) {
 
         if (nameIsEmptyValid(filmToUpd) && descLen200Valid(filmToUpd) &&
                 releaseDateValid(filmToUpd) && durationValid(filmToUpd)) {
