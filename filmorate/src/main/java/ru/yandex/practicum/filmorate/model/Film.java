@@ -10,21 +10,19 @@ import javax.validation.constraints.Size;
 @Data
 public class Film {
     private int id;
-
     @NotBlank
     private String name;
     @Size(max = 200)
     private String description;
     @NotNull
     private String releaseDate;
-    @Positive
+    @NotNull @Positive
     private Double duration;
-    public Film(int id){
+
+    public Film(int id) {
         this.id = id;
     }
-    public Film(){
 
+    public Film() {
     }
-
 }
-
