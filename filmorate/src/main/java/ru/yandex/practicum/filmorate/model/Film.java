@@ -16,7 +16,7 @@ public class Film {
     private String description;
     @NotNull
     private String releaseDate;
-    @Positive
+    @NotNull @Positive
     private Double duration;
 
     public Film(int id) {
