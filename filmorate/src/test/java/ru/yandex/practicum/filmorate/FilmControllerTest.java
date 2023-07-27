@@ -1,8 +1,6 @@
 package ru.yandex.practicum.filmorate;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.SpringApplication;
+
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
@@ -34,19 +32,17 @@ public class FilmControllerTest {
     }
 
     @Test
-    void descLen200ValidTest(){
+    void descLen200ValidTest() {
 
     }
 
     @Test
-    void releaseDateValidTest(){
+    void releaseDateValidTest() {
 
     }
 
     @Test
-    void durationValidTest(){
+    void durationValidTest() {
 
     }
-
-
 }
