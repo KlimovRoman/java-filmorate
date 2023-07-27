@@ -15,13 +15,13 @@ public class User {
     private String login;
 
     private String name;
-    @PastOrPresent
+    @NotNull @PastOrPresent
     private String birthday;
 
-    public User(){
-
+    public User() {
     }
-    public User(int id){
+
+    public User(int id) {
         this.id = id;
     }
 }
