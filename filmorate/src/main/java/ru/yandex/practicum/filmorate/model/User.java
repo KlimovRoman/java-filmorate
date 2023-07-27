@@ -15,7 +15,7 @@ public class User {
     private String login;
 
     private String name;
-    @PastOrPresent
+    @NotNull @PastOrPresent
     private String birthday;
 
     public User() {
