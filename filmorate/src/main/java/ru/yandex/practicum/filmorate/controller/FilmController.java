@@ -35,7 +35,7 @@ public class FilmController {
             log.info("Добавлен фильм с id = {}", filmIdCounter);
         } else {
             log.info("Валидация не пройдена при добавлени фильма");
-            throw new ValidationException("Не пройден один валидаторов");
+            throw new ValidationException("Не пройдена валидация");
         }
     }
 
@@ -58,7 +58,7 @@ public class FilmController {
             }
         } else {
             log.info("Валидация не пройдена при обновлении фильма");
-            throw new ValidationException("Не пройден один валидаторов");
+            throw new ValidationException("Не пройдена валидация");
         }
 
     }
