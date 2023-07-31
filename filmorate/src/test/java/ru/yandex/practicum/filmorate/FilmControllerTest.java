@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -11,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FilmControllerTest {
 
     @Test
-    public void dateValidMinTest(){
+    public void dateValidMinTest() {
         Film film = new Film();
         film.setName("name");
         film.setDuration(10.00);
@@ -23,7 +22,7 @@ public class FilmControllerTest {
     }
 
     @Test
-    public void dateValidEqualTest(){
+    public void dateValidEqualTest() {
         Film film = new Film();
         film.setName("name");
         film.setDuration(10.00);
@@ -35,7 +34,7 @@ public class FilmControllerTest {
     }
 
     @Test
-    public void dateValidMaxTest(){
+    public void dateValidMaxTest() {
         Film film = new Film();
         film.setName("name");
         film.setDuration(10.00);
