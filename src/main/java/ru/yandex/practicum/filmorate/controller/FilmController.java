@@ -22,7 +22,7 @@ public class FilmController {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @PostMapping
-    public void addFilm(@Valid @RequestBody Film filmToAdd) {
+    public Film addFilm(@Valid @RequestBody Film filmToAdd) {
 
         if (releaseDateValid(filmToAdd)) {
             filmIdCounter++;
@@ -33,6 +33,7 @@ public class FilmController {
             newFilm.setDuration(filmToAdd.getDuration());
             films.put(filmIdCounter, newFilm);
             log.info("Добавлен фильм с id = {}", filmIdCounter);
+            return newFilm;
         } else {
             log.info("Валидация не пройдена при добавлени фильма");
             throw new ValidationException("Не пройдена валидация");
@@ -40,7 +41,7 @@ public class FilmController {
     }
 
     @PutMapping
-    public void updFilm(@Valid @RequestBody Film filmToUpd) {
+    public Film updFilm(@Valid @RequestBody Film filmToUpd) {
 
         if (releaseDateValid(filmToUpd)) {
 
@@ -52,6 +53,7 @@ public class FilmController {
                 filmFromHash.setDuration(filmToUpd.getDuration());
                 filmFromHash.setReleaseDate(filmToUpd.getReleaseDate());
                 log.info("Обновлен фильм с id = {}", id);
+                return filmFromHash;
             } else {
                 log.info("Фильм не найден");
                 throw new EntityNotFoundException("Фильм не найден");
