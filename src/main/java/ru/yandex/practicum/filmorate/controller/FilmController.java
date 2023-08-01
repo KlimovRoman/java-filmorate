@@ -25,23 +25,18 @@ public class FilmController {
     @PostMapping
     public Film addFilm(@Valid @RequestBody Film filmToAdd) {
 
-        if (releaseDateValid(filmToAdd)) {
+            releaseDateValid(filmToAdd);
             filmIdCounter++;
             filmToAdd.setId(filmIdCounter);
             films.put(filmIdCounter, filmToAdd);
             log.info("Добавлен фильм с id = {}", filmIdCounter);
             return filmToAdd;
-        } else {
-            log.info("Валидация не пройдена при добавлени фильма");
-            throw new ValidationException("Не пройдена валидация");
-        }
     }
 
     @PutMapping
     public Film updFilm(@Valid @RequestBody Film filmToUpd) {
 
-        if (releaseDateValid(filmToUpd)) {
-
+            releaseDateValid(filmToUpd);
             final Integer id = filmToUpd.getId();
             Film film = films.get(id);
             if (film != null) {
@@ -51,10 +46,6 @@ public class FilmController {
                 film.setReleaseDate(filmToUpd.getReleaseDate());
                 log.info("Обновлен фильм с id = {}", id);
                 return film;
-            } else {
-                log.info("Фильм не найден");
-                throw new EntityNotFoundException("Фильм не найден");
-            }
 
         } else {
             log.info("Валидация не пройдена при обновлении фильма");
@@ -69,13 +60,11 @@ public class FilmController {
     }
 
     // методы для валидации
-    private boolean releaseDateValid(Film filmToCheck) {
+    private void releaseDateValid(Film filmToCheck) {
         LocalDate dateToCheck = filmToCheck.getReleaseDate();
-        if (dateToCheck.isAfter(dateForCompare)) {
-            return true;
-        } else {
+        if (!dateToCheck.isAfter(dateForCompare)) {
             log.info("Валидация не пройдена, дата релиза должна быть после 1895-12-28");
-            return false;
+            throw new ValidationException("Не пройдена валидация");
         }
     }
 }
