@@ -22,7 +22,7 @@ public class UserController {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @PostMapping
-    public void addUser(@Valid @RequestBody User userToAdd) {
+    public User addUser(@Valid @RequestBody User userToAdd) {
         userIdCounter++;
         User newUser = new User(userIdCounter);
         if (!nameValidation(userToAdd)) {
@@ -35,10 +35,11 @@ public class UserController {
         newUser.setBirthday(userToAdd.getBirthday());
         users.put(userIdCounter, newUser);
         log.info("Добавлен юзер с id = {}", userIdCounter);
+        return newUser;
     }
 
     @PutMapping
-    public void updUser(@Valid @RequestBody User userToUpd) {
+    public User updUser(@Valid @RequestBody User userToUpd) {
 
         final int id = userToUpd.getId();
         if (users.containsKey(id)) {
@@ -52,6 +53,7 @@ public class UserController {
             userFromHash.setLogin(userToUpd.getLogin());
             userFromHash.setEmail(userToUpd.getEmail());
             log.info("Обновлен юзер с id = {}", id);
+            return userFromHash;
         } else {
             log.info("пользователь не найден!");
             throw new EntityNotFoundException("пользователь не найден!");
