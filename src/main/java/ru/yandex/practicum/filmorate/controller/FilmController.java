@@ -19,21 +19,18 @@ import java.util.List;
 public class FilmController {
     private HashMap<Integer, Film> films = new HashMap<>();
     private int filmIdCounter = 0;
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final LocalDate dateForCompare =  LocalDate.parse("1895-12-28",formatter);
 
     @PostMapping
     public Film addFilm(@Valid @RequestBody Film filmToAdd) {
 
         if (releaseDateValid(filmToAdd)) {
             filmIdCounter++;
-            Film newFilm = new Film(filmIdCounter);
-            newFilm.setReleaseDate(filmToAdd.getReleaseDate());
-            newFilm.setName(filmToAdd.getName());
-            newFilm.setDescription(filmToAdd.getDescription());
-            newFilm.setDuration(filmToAdd.getDuration());
-            films.put(filmIdCounter, newFilm);
+            filmToAdd.setId(filmIdCounter);
+            films.put(filmIdCounter, filmToAdd);
             log.info("Добавлен фильм с id = {}", filmIdCounter);
-            return newFilm;
+            return filmToAdd;
         } else {
             log.info("Валидация не пройдена при добавлени фильма");
             throw new ValidationException("Не пройдена валидация");
@@ -46,18 +43,19 @@ public class FilmController {
         if (releaseDateValid(filmToUpd)) {
 
             final Integer id = filmToUpd.getId();
-            if (films.containsKey(id)) {
-                Film filmFromHash = films.get(id);
-                filmFromHash.setDescription(filmToUpd.getDescription());
-                filmFromHash.setName(filmToUpd.getName());
-                filmFromHash.setDuration(filmToUpd.getDuration());
-                filmFromHash.setReleaseDate(filmToUpd.getReleaseDate());
+            Film film = films.get(id);
+            if (film != null) {
+                film.setName(filmToUpd.getName());
+                film.setDescription(filmToUpd.getDescription());
+                film.setDuration(filmToUpd.getDuration());
+                film.setReleaseDate(filmToUpd.getReleaseDate());
                 log.info("Обновлен фильм с id = {}", id);
-                return filmFromHash;
+                return film;
             } else {
                 log.info("Фильм не найден");
                 throw new EntityNotFoundException("Фильм не найден");
             }
+
         } else {
             log.info("Валидация не пройдена при обновлении фильма");
             throw new ValidationException("Не пройдена валидация");
@@ -72,8 +70,7 @@ public class FilmController {
 
     // методы для валидации
     private boolean releaseDateValid(Film filmToCheck) {
-        LocalDate dateToCheck = LocalDate.parse(filmToCheck.getReleaseDate(),formatter);
-        LocalDate dateForCompare =  LocalDate.parse("1895-12-28",formatter);
+        LocalDate dateToCheck = filmToCheck.getReleaseDate();
         if (dateToCheck.isAfter(dateForCompare)) {
             return true;
         } else {
