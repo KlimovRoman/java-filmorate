@@ -19,45 +19,36 @@ public class UserController {
 
     private HashMap<Integer, User> users = new HashMap<>();
     private int userIdCounter = 0;
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @PostMapping
     public User addUser(@Valid @RequestBody User userToAdd) {
         userIdCounter++;
-        User newUser = new User(userIdCounter);
-        if (!nameValidation(userToAdd)) {
-            newUser.setName(userToAdd.getLogin());
-        } else {
-            newUser.setName(userToAdd.getName());
-        }
-        newUser.setLogin(userToAdd.getLogin());
-        newUser.setEmail(userToAdd.getEmail());
-        newUser.setBirthday(userToAdd.getBirthday());
-        users.put(userIdCounter, newUser);
+        nameValidationAndSetName(userToAdd);
+        userToAdd.setId(userIdCounter);
+        users.put(userIdCounter, userToAdd);
         log.info("Добавлен юзер с id = {}", userIdCounter);
-        return newUser;
+        return userToAdd;
     }
 
     @PutMapping
     public User updUser(@Valid @RequestBody User userToUpd) {
 
         final int id = userToUpd.getId();
-        if (users.containsKey(id)) {
-            User userFromHash = users.get(id);
-            userFromHash.setBirthday(userToUpd.getBirthday());
-            if (!nameValidation(userToUpd)) {
-                userFromHash.setName(userToUpd.getLogin());
-            } else {
-                userFromHash.setName(userToUpd.getName());
-            }
-            userFromHash.setLogin(userToUpd.getLogin());
-            userFromHash.setEmail(userToUpd.getEmail());
+        User user = users.get(id);
+        if (user != null) {
+            user.setBirthday(userToUpd.getBirthday());
+            user.setName(userToUpd.getName());
+            user.setLogin(userToUpd.getLogin());
+            user.setEmail(userToUpd.getEmail());
+            nameValidationAndSetName(userToUpd);
             log.info("Обновлен юзер с id = {}", id);
-            return userFromHash;
+            return user;
         } else {
             log.info("пользователь не найден!");
             throw new EntityNotFoundException("пользователь не найден!");
         }
+
     }
 
     @GetMapping
@@ -65,11 +56,9 @@ public class UserController {
         return new ArrayList<>(users.values());
     }
 
-    private boolean nameValidation(User usr) {
+    private void nameValidationAndSetName(User usr) {
         if (usr.getName() == null || usr.getName().isBlank()) {
-            return false;
-        } else {
-            return true;
+            usr.setName(usr.getLogin());
         }
     }
 }
