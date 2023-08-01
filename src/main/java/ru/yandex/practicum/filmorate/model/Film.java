@@ -6,6 +6,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
+import java.time.LocalDate;
 
 @Data
 public class Film {
@@ -15,7 +16,7 @@ public class Film {
     @Size(max = 200)
     private String description;
     @NotNull
-    private String releaseDate;
+    private LocalDate releaseDate;
     @NotNull @Positive
     private Double duration;
 
