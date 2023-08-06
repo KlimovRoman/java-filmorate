@@ -61,9 +61,12 @@ public class FilmController {
     // методы для валидации
     private void releaseDateValid(Film filmToCheck) {
         LocalDate dateToCheck = filmToCheck.getReleaseDate();
-        if (!dateToCheck.isAfter(dateForCompare)) {
-            log.info("Валидация не пройдена, дата релиза должна быть после 1895-12-28");
-            throw new ValidationException("Не пройдена валидация");
+        if (!dateToCheck.equals(dateForCompare))
+        {
+            if (!dateToCheck.isAfter(dateForCompare)) {
+                log.info("Валидация не пройдена, дата релиза должна быть после 1895-12-28");
+                throw new ValidationException("Не пройдена валидация");
+            }
         }
     }
 }
