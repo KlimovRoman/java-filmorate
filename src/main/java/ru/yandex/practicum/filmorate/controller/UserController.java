@@ -37,11 +37,11 @@ public class UserController {
         final int id = userToUpd.getId();
         User user = users.get(id);
         if (user != null) {
+            nameValidationAndSetName(userToUpd);
             user.setBirthday(userToUpd.getBirthday());
             user.setName(userToUpd.getName());
             user.setLogin(userToUpd.getLogin());
             user.setEmail(userToUpd.getEmail());
-            nameValidationAndSetName(userToUpd);
             log.info("Обновлен юзер с id = {}", id);
             return user;
         } else {
