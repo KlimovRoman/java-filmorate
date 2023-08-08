@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -20,8 +22,8 @@ public class FilmControllerTest {
         film.setDuration(10.00);
         film.setDescription("des");
         film.setReleaseDate(date);
-        FilmController controller = new FilmController();
-        final RuntimeException excep = assertThrows(RuntimeException.class, () -> controller.addFilm(film));
+        FilmStorage store = new InMemoryFilmStorage();
+        final RuntimeException excep = assertThrows(RuntimeException.class, () -> store.addFilm(film));
         assertEquals("Не пройдена валидация", excep.getMessage());
     }
 
@@ -34,8 +36,8 @@ public class FilmControllerTest {
         film.setDuration(10.00);
         film.setDescription("des");
         film.setReleaseDate(date);
-        FilmController controller = new FilmController();
-        final RuntimeException excep = assertThrows(RuntimeException.class, () -> controller.addFilm(film));
+        FilmStorage store = new InMemoryFilmStorage();
+        final RuntimeException excep = assertThrows(RuntimeException.class, () -> store.addFilm(film));
         assertEquals("Не пройдена валидация", excep.getMessage());
     }
 
@@ -48,9 +50,9 @@ public class FilmControllerTest {
         film.setDuration(10.00);
         film.setDescription("des");
         film.setReleaseDate(date);
-        FilmController controller = new FilmController();
-        controller.addFilm(film);
-        List<Film> list = controller.getFilms();
+        FilmStorage store = new InMemoryFilmStorage();
+        store.addFilm(film);
+        List<Film> list = store.getFilms();
         assertEquals(1, list.size());
 
     }

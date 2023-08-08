@@ -1,64 +1,38 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
-
 import ru.yandex.practicum.filmorate.model.User;
-
+import ru.yandex.practicum.filmorate.service.UserService;
 import javax.validation.Valid;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
+    private final UserService userService; //поле куда будет передан сервис через контструктор с помощью зависимостей
 
-    private HashMap<Integer, User> users = new HashMap<>();
-    private int userIdCounter = 0;
-    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    //связали зависимостью контроллер и сервис
+    @Autowired
+    public UserController (UserService userService){
+        this.userService = userService;
+    }
 
     @PostMapping
     public User addUser(@Valid @RequestBody User userToAdd) {
-        userIdCounter++;
-        nameValidationAndSetName(userToAdd);
-        userToAdd.setId(userIdCounter);
-        users.put(userIdCounter, userToAdd);
-        log.info("Добавлен юзер с id = {}", userIdCounter);
-        return userToAdd;
+        return userService.addUser(userToAdd);
     }
 
     @PutMapping
     public User updUser(@Valid @RequestBody User userToUpd) {
-
-        final int id = userToUpd.getId();
-        User user = users.get(id);
-        if (user != null) {
-            nameValidationAndSetName(userToUpd);
-            user.setBirthday(userToUpd.getBirthday());
-            user.setName(userToUpd.getName());
-            user.setLogin(userToUpd.getLogin());
-            user.setEmail(userToUpd.getEmail());
-            log.info("Обновлен юзер с id = {}", id);
-            return user;
-        } else {
-            log.info("пользователь не найден!");
-            throw new EntityNotFoundException("пользователь не найден!");
-        }
-
+        return userService.updUser(userToUpd);
     }
 
     @GetMapping
     public List<User> getAllUsers() {
-        return new ArrayList<>(users.values());
+        return userService.getAllUsers();
     }
 
-    private void nameValidationAndSetName(User usr) {
-        if (usr.getName() == null || usr.getName().isBlank()) {
-            usr.setName(usr.getLogin());
-        }
-    }
 }
