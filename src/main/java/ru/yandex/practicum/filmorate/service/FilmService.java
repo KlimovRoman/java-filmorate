@@ -16,7 +16,7 @@ public class FilmService {
 
     //связали зависимостью  сервис и хранилище
     @Autowired
-    public FilmService (FilmStorage filmStorage) {
+    public FilmService(FilmStorage filmStorage) {
         this.filmStorage = filmStorage;
     }
 
@@ -34,7 +34,7 @@ public class FilmService {
 
     public void addLike(int filmId, int userLikeId) {
         Film film = filmStorage.getFilmById(filmId);
-        if(film != null) {
+        if (film != null) {
             film.addLike(userLikeId);
         } else {
             throw new EntityNotFoundException("Фильм не найден в базе!");
@@ -43,7 +43,7 @@ public class FilmService {
 
     public void delLike(int filmId, int userLikeId) {
         Film film = filmStorage.getFilmById(filmId);
-        if(film != null) {
+        if (film != null) {
             film.delLike(userLikeId);
         } else {
             throw new EntityNotFoundException("Фильм не найден в базе!");
@@ -58,10 +58,10 @@ public class FilmService {
         List<Film> filmsToReturn = new ArrayList<>();
         List<Film> allFilms = filmStorage.getFilms();
         allFilms.sort(comparatorForTopLikes);
-        if(topCount > allFilms.size()) {
+        if (topCount > allFilms.size()) {
             topCount = allFilms.size(); // на случай если фильмов меньше чем запрошенное кол-во
         }
-        for(int i = 0; i < topCount; i++) {
+        for (int i = 0; i < topCount; i++) {
             filmsToReturn.add(allFilms.get(i));
         }
         return filmsToReturn;
