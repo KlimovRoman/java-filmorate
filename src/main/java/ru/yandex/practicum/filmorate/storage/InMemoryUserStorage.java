@@ -50,6 +50,11 @@ public class InMemoryUserStorage implements UserStorage {
         return new ArrayList<>(users.values());
     }
 
+    @Override
+    public User getUserById(int id) {
+        return users.get(id);
+    }
+
     private void nameValidationAndSetName(User usr) {
         if (usr.getName() == null || usr.getName().isBlank()) {
             usr.setName(usr.getLogin());

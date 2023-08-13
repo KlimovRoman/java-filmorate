@@ -54,6 +54,10 @@ public class InMemoryFilmStorage implements FilmStorage {
     public List<Film> getFilms() {
         return new ArrayList<>(films.values());
     }
+    @Override
+    public Film getFilmById(int id) {
+        return films.get(id);
+    }
 
     // методы для валидации
     private void releaseDateValid(Film filmToCheck) {
