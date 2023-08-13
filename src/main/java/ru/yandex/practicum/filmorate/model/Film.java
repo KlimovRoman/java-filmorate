@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -37,6 +38,8 @@ public class Film {
     public void delLike(int userId) {
         if (likes.contains(userId)) {
             likes.remove(userId);
+        } else {
+            throw new EntityNotFoundException("Лайк не найден!");
         }
     }
 

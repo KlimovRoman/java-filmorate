@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.LikeComparator;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -35,6 +36,8 @@ public class FilmService {
         Film film = filmStorage.getFilmById(filmId);
         if(film != null) {
             film.addLike(userLikeId);
+        } else {
+            throw new EntityNotFoundException("Фильм не найден в базе!");
         }
     }
 
@@ -42,6 +45,8 @@ public class FilmService {
         Film film = filmStorage.getFilmById(filmId);
         if(film != null) {
             film.delLike(userLikeId);
+        } else {
+            throw new EntityNotFoundException("Фильм не найден в базе!");
         }
     }
 

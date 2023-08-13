@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -52,6 +53,13 @@ public class FilmController {
     @GetMapping("/popular")
     public List<Film> getTopMostLikedFilms(@RequestParam(defaultValue = "10") int count) {
         return filmService.getTopMostLikedFilms(count);
+    }
+
+    @ExceptionHandler
+    // отлавливаем исключение IllegalArgumentException
+    public Map<String, String> handleNegativeCount(final IllegalArgumentException e) {
+        // возвращаем сообщение об ошибке
+        return Map.of("error", "Передан отрицательный параметр count.");
     }
 
 }

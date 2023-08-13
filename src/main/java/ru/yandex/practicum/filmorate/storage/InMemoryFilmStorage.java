@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -43,10 +44,9 @@ public class InMemoryFilmStorage implements FilmStorage {
             film.setReleaseDate(filmToUpd.getReleaseDate());
             log.info("Обновлен фильм с id = {}", id);
             return film;
-
         } else {
-            log.info("Валидация не пройдена при обновлении фильма");
-            throw new ValidationException("Не пройдена валидация");
+            log.info("Фильм не найден в базе");
+            throw new EntityNotFoundException("Фильм не найден в базе");
         }
     }
 
@@ -56,7 +56,12 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
     @Override
     public Film getFilmById(int id) {
-        return films.get(id);
+        Film film = films.get(id);
+        if(film == null) {
+            throw new EntityNotFoundException("Фильм не найден в базе");
+        } else {
+            return films.get(id);
+        }
     }
 
     // методы для валидации

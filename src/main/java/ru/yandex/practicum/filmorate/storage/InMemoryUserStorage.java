@@ -52,7 +52,12 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User getUserById(int id) {
-        return users.get(id);
+        User user = users.get(id);
+        if(user == null) {
+            throw  new EntityNotFoundException("пользователь не найден!");
+        } else {
+            return users.get(id);
+        }
     }
 
     private void nameValidationAndSetName(User usr) {

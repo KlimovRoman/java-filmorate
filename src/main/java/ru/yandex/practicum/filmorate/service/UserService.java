@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -26,6 +27,8 @@ private final UserStorage userStorage; //поле куда будет перед
         if(usr1 != null && usr2 != null) {
             usr1.addFriend(friendId);
             usr2.addFriend(id);
+        } else {
+            throw new EntityNotFoundException("Пользователи или пользователь не найдены");
         }
     }
 
@@ -35,6 +38,8 @@ private final UserStorage userStorage; //поле куда будет перед
         if(usr1 != null && usr2 != null) {
             usr1.delFriend(friendId);
             usr2.delFriend(id);
+        } else {
+            throw new EntityNotFoundException("Пользователи или пользователь не найдены");
         }
     }
 
@@ -48,7 +53,7 @@ private final UserStorage userStorage; //поле куда будет перед
             }
             return frList;
         } else {
-            return null;
+            throw new EntityNotFoundException("Пользователь не найден!");
         }
     }
 
@@ -65,7 +70,7 @@ private final UserStorage userStorage; //поле куда будет перед
             }
             return commonFriends;
         } else {
-            return null;
+            throw new EntityNotFoundException("Пользователи или пользователь не найдены");
         }
     }
 
