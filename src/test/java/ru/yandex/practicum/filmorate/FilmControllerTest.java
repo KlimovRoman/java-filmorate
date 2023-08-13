@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate;
 
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
@@ -22,7 +23,7 @@ public class FilmControllerTest {
         film.setDescription("des");
         film.setReleaseDate(date);
         FilmStorage store = new InMemoryFilmStorage();
-        final RuntimeException excep = assertThrows(RuntimeException.class, () -> store.addFilm(film));
+        final RuntimeException excep = assertThrows(ValidationException.class, () -> store.addFilm(film));
         assertEquals("Не пройдена валидация", excep.getMessage());
     }
 
@@ -36,7 +37,7 @@ public class FilmControllerTest {
         film.setDescription("des");
         film.setReleaseDate(date);
         FilmStorage store = new InMemoryFilmStorage();
-        final RuntimeException excep = assertThrows(RuntimeException.class, () -> store.addFilm(film));
+        final RuntimeException excep = assertThrows(ValidationException.class, () -> store.addFilm(film));
         assertEquals("Не пройдена валидация", excep.getMessage());
     }
 
