@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate;
 
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
@@ -54,6 +53,5 @@ public class FilmControllerTest {
         store.addFilm(film);
         List<Film> list = store.getFilms();
         assertEquals(1, list.size());
-
     }
 }
