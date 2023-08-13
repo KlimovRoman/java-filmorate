@@ -16,7 +16,7 @@ public class UserController {
 
     //связали зависимостью контроллер и сервис
     @Autowired
-    public UserController (UserService userService){
+    public UserController (UserService userService) {
         this.userService = userService;
     }
 
@@ -49,7 +49,7 @@ public class UserController {
     public void delFriend(@PathVariable int id, @PathVariable int friendId) {
         userService.delFriend(id, friendId);
     }
-
+    
     @GetMapping("/{id}/friends")
     public List<User> getUserFriends(@PathVariable int id) {
        return userService.getUserFriends(id);
