@@ -24,7 +24,7 @@ private final UserStorage userStorage; //поле куда будет перед
     public void addFriend(int id, int friendId) {
         User usr1 = userStorage.getUserById(id);
         User usr2 = userStorage.getUserById(friendId);
-        if(usr1 != null && usr2 != null) {
+        if (usr1 != null && usr2 != null) {
             usr1.addFriend(friendId);
             usr2.addFriend(id);
         } else {
@@ -35,7 +35,7 @@ private final UserStorage userStorage; //поле куда будет перед
     public void delFriend(int id, int friendId) {
         User usr1 = userStorage.getUserById(id);
         User usr2 = userStorage.getUserById(friendId);
-        if(usr1 != null && usr2 != null) {
+        if (usr1 != null && usr2 != null) {
             usr1.delFriend(friendId);
             usr2.delFriend(id);
         } else {
@@ -45,10 +45,10 @@ private final UserStorage userStorage; //поле куда будет перед
 
     public List<User> getUserFriends(int id) {
         User usr = userStorage.getUserById(id);
-        if(usr != null) {
+        if (usr != null) {
             Set<Integer> frSet =  usr.getFriends();
             List<User> frList = new ArrayList<>();
-            for(Integer frId: frSet){
+            for (Integer frId: frSet) {
                 frList.add(userStorage.getUserById(frId));
             }
             return frList;
@@ -61,11 +61,11 @@ private final UserStorage userStorage; //поле куда будет перед
         List<User> commonFriends = new ArrayList<>();
         User usr1 = userStorage.getUserById(id);
         User usr2 = userStorage.getUserById(otherId);
-        if(usr1 != null && usr2 != null) {
+        if (usr1 != null && usr2 != null) {
             Set<Integer> frSet1 = usr1.getFriends();
             Set<Integer> frSet2 = usr2.getFriends();
             Set<Integer> commonFriendsIds = frSet1.stream().filter(frSet2::contains).collect(Collectors.toSet()); //нашли пересечение
-            for(int comId: commonFriendsIds) {
+            for (int comId: commonFriendsIds) {
                 commonFriends.add(userStorage.getUserById(comId));
             }
             return commonFriends;
