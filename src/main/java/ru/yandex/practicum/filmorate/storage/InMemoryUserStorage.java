@@ -54,7 +54,7 @@ public class InMemoryUserStorage implements UserStorage {
         if (user == null) {
             throw  new EntityNotFoundException("пользователь не найден!");
         } else {
-            return Optional.of(users.get(id));
+            return Optional.ofNullable(users.get(id));
         }
     }
 

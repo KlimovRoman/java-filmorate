@@ -19,7 +19,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationException(final ValidationException e) {
-        log.trace("Получен статус 400 Bad Request {}", e.getMessage(), e);
+        log.debug("Получен статус 400 Bad Request {}", e.getMessage(), e);
         return new ErrorResponse(
                 e.getMessage()
         );
@@ -28,7 +28,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleEntityNotFoundException(final EntityNotFoundException e) {
-        log.trace("Получен статус 404 Not found {}", e.getMessage(), e);
+        log.debug("Получен статус 404 Not found {}", e.getMessage(), e);
         return new ErrorResponse(
                 e.getMessage()
         );
@@ -37,7 +37,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleThrowable(final Throwable e) {
-        log.trace("Получен статус 500 Internal Server Error {}", e.getMessage(), e);
+        log.debug("Получен статус 500 Internal Server Error {}", e.getMessage(), e);
         return new ErrorResponse(
                 "Произошла непредвиденная ошибка."
         );
@@ -46,7 +46,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
-        log.trace("Получен статус 400 Bad Request {}", e.getMessage(), e);
+        log.debug("Получен статус 400 Bad Request {}", e.getMessage(), e);
         return new ErrorResponse(
                 e.getMessage()
         );
@@ -55,10 +55,9 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleNegativeInteger(final ConstraintViolationException e) {
-        log.trace("Получен статус 400 Bad Request {}", e.getMessage(), e);
+        log.debug("Получен статус 400 Bad Request {}", e.getMessage(), e);
         return new ErrorResponse(
                 "Значение не может отрицательным!"
         );
     }
-
 }
