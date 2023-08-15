@@ -4,22 +4,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import java.time.format.DateTimeFormatter;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
 public class InMemoryUserStorage implements UserStorage {
     private HashMap<Integer, User> users = new HashMap<>();
     private int userIdCounter = 0;
-    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     public User addUser(User userToAdd) {
         userIdCounter++;
-        nameValidationAndSetName(userToAdd);
         userToAdd.setId(userIdCounter);
         users.put(userIdCounter, userToAdd);
         log.info("Добавлен юзер с id = {}", userIdCounter);
@@ -32,7 +31,6 @@ public class InMemoryUserStorage implements UserStorage {
         final int id = userToUpd.getId();
         User user = users.get(id);
         if (user != null) {
-            nameValidationAndSetName(userToUpd);
             user.setBirthday(userToUpd.getBirthday());
             user.setName(userToUpd.getName());
             user.setLogin(userToUpd.getLogin());
@@ -51,18 +49,13 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User getUserById(int id) {
+    public Optional<User> getUserById(int id) {
         User user = users.get(id);
         if (user == null) {
             throw  new EntityNotFoundException("пользователь не найден!");
         } else {
-            return users.get(id);
+            return Optional.of(users.get(id));
         }
     }
 
-    private void nameValidationAndSetName(User usr) {
-        if (usr.getName() == null || usr.getName().isBlank()) {
-            usr.setName(usr.getLogin());
-        }
-    }
 }

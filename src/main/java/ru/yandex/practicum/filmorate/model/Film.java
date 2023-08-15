@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 
@@ -14,6 +15,7 @@ import java.util.Set;
 @Data
 public class Film {
     private int id;
+    @JsonIgnore
     private Set<Integer> likes = new HashSet<>();
     @NotBlank
     private String name;

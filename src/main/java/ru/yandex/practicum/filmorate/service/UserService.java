@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,8 +20,8 @@ private final UserStorage userStorage; //поле куда будет перед
     }
 
     public void addFriend(int id, int friendId) {
-        User usr1 = userStorage.getUserById(id);
-        User usr2 = userStorage.getUserById(friendId);
+        User usr1 = getUserById(id);
+        User usr2 = getUserById(friendId);
         if (usr1 != null && usr2 != null) {
             usr1.addFriend(friendId);
             usr2.addFriend(id);
@@ -32,8 +31,8 @@ private final UserStorage userStorage; //поле куда будет перед
     }
 
     public void delFriend(int id, int friendId) {
-        User usr1 = userStorage.getUserById(id);
-        User usr2 = userStorage.getUserById(friendId);
+        User usr1 = getUserById(id);
+        User usr2 = getUserById(friendId);
         if (usr1 != null && usr2 != null) {
             usr1.delFriend(friendId);
             usr2.delFriend(id);
@@ -43,41 +42,34 @@ private final UserStorage userStorage; //поле куда будет перед
     }
 
     public List<User> getUserFriends(int id) {
-        User usr = userStorage.getUserById(id);
+        User usr = getUserById(id);
         if (usr != null) {
-            Set<Integer> frSet =  usr.getFriends();
-            List<User> frList = new ArrayList<>();
-            for (Integer frId: frSet) {
-                frList.add(userStorage.getUserById(frId));
-            }
-            return frList;
+            return  usr.getFriends().stream().map(this::getUserById).collect(Collectors.toList());
         } else {
             throw new EntityNotFoundException("Пользователь не найден!");
         }
     }
 
     public List<User> getCommonFriends(int id, int otherId) {
-        List<User> commonFriends = new ArrayList<>();
-        User usr1 = userStorage.getUserById(id);
-        User usr2 = userStorage.getUserById(otherId);
+        User usr1 = getUserById(id);
+        User usr2 = getUserById(otherId);
         if (usr1 != null && usr2 != null) {
             Set<Integer> frSet1 = usr1.getFriends();
             Set<Integer> frSet2 = usr2.getFriends();
             Set<Integer> commonFriendsIds = frSet1.stream().filter(frSet2::contains).collect(Collectors.toSet()); //нашли пересечение
-            for (int comId: commonFriendsIds) {
-                commonFriends.add(userStorage.getUserById(comId));
-            }
-            return commonFriends;
+            return commonFriendsIds.stream().map(this::getUserById).collect(Collectors.toList()); //дсотали пользоваетелей и упокавали в список
         } else {
             throw new EntityNotFoundException("Пользователи или пользователь не найдены");
         }
     }
 
     public User addUser(User userToAdd) {
+        nameValidationAndSetName(userToAdd);
         return userStorage.addUser(userToAdd);
     }
 
     public User updUser(User userToUpd) {
+        nameValidationAndSetName(userToUpd);
         return userStorage.updUser(userToUpd);
     }
 
@@ -86,8 +78,12 @@ private final UserStorage userStorage; //поле куда будет перед
     }
 
     public User getUserById(int id) {
-
-        return userStorage.getUserById(id);
+        return userStorage.getUserById(id).orElseThrow(() -> new  EntityNotFoundException("пользователь не найден!"));
     }
 
+    private void nameValidationAndSetName(User usr) {
+        if (usr.getName() == null || usr.getName().isBlank()) {
+            usr.setName(usr.getLogin());
+        }
+    }
 }

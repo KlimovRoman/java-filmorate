@@ -1,24 +1,26 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import java.util.List;
-import java.util.Map;
 
+@RequiredArgsConstructor
+@Validated
 @Slf4j
 @RestController
 @RequestMapping("/films")
 public class FilmController {
     private final FilmService filmService;
 
-    @Autowired
-    public FilmController(FilmService filmService) {
-         this.filmService = filmService;
-    }
+
 
     @PostMapping
     public Film addFilm(@Valid @RequestBody Film filmToAdd) {
@@ -51,15 +53,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<Film> getTopMostLikedFilms(@RequestParam(defaultValue = "10") int count) {
+    public List<Film> getTopMostLikedFilms(@Positive @RequestParam(defaultValue = "10") int count) {
         return filmService.getTopMostLikedFilms(count);
     }
-
-    @ExceptionHandler
-    // отлавливаем исключение IllegalArgumentException
-    public Map<String, String> handleNegativeCount(final IllegalArgumentException e) {
-        // возвращаем сообщение об ошибке
-        return Map.of("error", "Передан отрицательный параметр count.");
-    }
-
 }

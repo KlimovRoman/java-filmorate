@@ -2,27 +2,21 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
     private HashMap<Integer, Film> films = new HashMap<>();
     private int filmIdCounter = 0;
-    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private final LocalDate dateForCompare =  LocalDate.parse("1895-12-28",formatter);
 
     @Override
     public Film addFilm(Film filmToAdd) {
-        releaseDateValid(filmToAdd);
         filmIdCounter++;
         filmToAdd.setId(filmIdCounter);
         films.put(filmIdCounter, filmToAdd);
@@ -32,7 +26,6 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film updFilm(Film filmToUpd) {
-        releaseDateValid(filmToUpd);
         final Integer id = filmToUpd.getId();
         Film film = films.get(id);
         if (film != null) {
@@ -54,21 +47,8 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film getFilmById(int id) {
-        Film film = films.get(id);
-        if (film == null) {
-            throw new EntityNotFoundException("Фильм не найден в базе");
-        } else {
-            return films.get(id);
-        }
+    public Optional<Film> getFilmById(int id) {
+        return Optional.of(films.get(id));
     }
 
-    // методы для валидации
-    private void releaseDateValid(Film filmToCheck) {
-        LocalDate dateToCheck = filmToCheck.getReleaseDate();
-        if (dateToCheck.isBefore(dateForCompare)) {
-            log.info("Валидация не пройдена, дата релиза должна быть после 1895-12-28");
-            throw new ValidationException("Не пройдена валидация");
-        }
-    }
 }
