@@ -5,15 +5,12 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Component
 public class InMemoryUserStorage implements UserStorage {
-    private HashMap<Integer, User> users = new HashMap<>();
+    private Map<Integer, User> users = new HashMap<>();
     private int userIdCounter = 0;
 
     @Override

@@ -4,15 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+
+import java.util.*;
 
 @Slf4j
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
-    private HashMap<Integer, Film> films = new HashMap<>();
+    private Map<Integer, Film> films = new HashMap<>();
     private int filmIdCounter = 0;
 
     @Override
