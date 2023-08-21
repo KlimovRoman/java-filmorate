@@ -38,7 +38,7 @@ public class Film {
     }
 
     public void delLike(int userId) {
-        if (!likes.remove(userId)) { //Вернет boolean в зависимости от того, было что-то удалено или нет
+        if (!likes.remove(userId)) { //Вернет boolean в зависимости от того, было что-то удалено или нет - 11 тз
             throw new EntityNotFoundException("Лайк не найден!");
         }
     }
