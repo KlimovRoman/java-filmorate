@@ -1,64 +1,60 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
-
 import ru.yandex.practicum.filmorate.model.User;
-
+import ru.yandex.practicum.filmorate.service.UserService;
 import javax.validation.Valid;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
+@RequiredArgsConstructor
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
+    private final UserService userService; //поле куда будет передан сервис через контструктор с помощью зависимостей
 
-    private HashMap<Integer, User> users = new HashMap<>();
-    private int userIdCounter = 0;
-    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    //связали зависимостью контроллер и сервис через аннотацию RequiredArgsConstructor
 
     @PostMapping
     public User addUser(@Valid @RequestBody User userToAdd) {
-        userIdCounter++;
-        nameValidationAndSetName(userToAdd);
-        userToAdd.setId(userIdCounter);
-        users.put(userIdCounter, userToAdd);
-        log.info("Добавлен юзер с id = {}", userIdCounter);
-        return userToAdd;
+        return userService.addUser(userToAdd);
     }
 
     @PutMapping
     public User updUser(@Valid @RequestBody User userToUpd) {
-
-        final int id = userToUpd.getId();
-        User user = users.get(id);
-        if (user != null) {
-            user.setBirthday(userToUpd.getBirthday());
-            user.setName(userToUpd.getName());
-            user.setLogin(userToUpd.getLogin());
-            user.setEmail(userToUpd.getEmail());
-            nameValidationAndSetName(userToUpd);
-            log.info("Обновлен юзер с id = {}", id);
-            return user;
-        } else {
-            log.info("пользователь не найден!");
-            throw new EntityNotFoundException("пользователь не найден!");
-        }
-
+        return userService.updUser(userToUpd);
     }
 
     @GetMapping
     public List<User> getAllUsers() {
-        return new ArrayList<>(users.values());
+        return userService.getAllUsers();
     }
 
-    private void nameValidationAndSetName(User usr) {
-        if (usr.getName() == null || usr.getName().isBlank()) {
-            usr.setName(usr.getLogin());
-        }
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable int id) {
+       return userService.getUserById(id);
     }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addFriend(@PathVariable int id, @PathVariable int friendId) {
+        userService.addFriend(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void delFriend(@PathVariable int id, @PathVariable int friendId) {
+        userService.delFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> getUserFriends(@PathVariable int id) {
+       return userService.getUserFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        return userService.getCommonFriends(id, otherId);
+    }
+
 }
