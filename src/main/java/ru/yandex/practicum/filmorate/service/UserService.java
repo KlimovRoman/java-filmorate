@@ -26,36 +26,17 @@ private final UserStorage userStorage; //поле куда будет перед
     }
 
 
-    public void delFrienddel(int id, int friendId) {
-        User usr1 = getUserById(id);
-        User usr2 = getUserById(friendId);
-        if (usr1 != null && usr2 != null) {
-            usr1.delFriend(friendId);
-            usr2.delFriend(id);
-        } else {
-            throw new EntityNotFoundException("Пользователи или пользователь не найдены");
-        }
-    }
-
     public void delFriend(int id, int friendId) {
         userStorage.delFriend(id, friendId);
     }
 
-    public List<User> getUserFriendsDE(int id) {
-        User usr = getUserById(id);
-        if (usr != null) {
-            return  usr.getFriends().stream().map(this::getUserById).collect(Collectors.toList());
-        } else {
-            throw new EntityNotFoundException("Пользователь не найден!");
-        }
-    }
 
 
     public List<User> getUserFriends(int id) {
        return userStorage.getUserFriends(id);
     }
 
-    public List<User> getCommonFriends(int id, int otherId) {
+    public List<User> getCommonFriendsDEL(int id, int otherId) {
         User usr1 = getUserById(id);
         User usr2 = getUserById(otherId);
         if (usr1 != null && usr2 != null) {
@@ -66,6 +47,10 @@ private final UserStorage userStorage; //поле куда будет перед
         } else {
             throw new EntityNotFoundException("Пользователи или пользователь не найдены");
         }
+    }
+
+    public List<User> getCommonFriends(int id, int otherId) {
+      return userStorage.getCommonFriends(id, otherId);
     }
 
     public User addUser(User userToAdd) {

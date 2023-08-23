@@ -61,7 +61,7 @@ public class FilmService {
        return film;
     }
 
-    public List<Film> getTopMostLikedFilms(int topCount) {
+    public List<Film> getTopMostLikedFilmsDEL(int topCount) {
         List<Film> filmsToReturn = new ArrayList<>();
         List<Film> allFilms = filmStorage.getFilms();
         allFilms.sort(comparatorForTopLikes);
@@ -72,6 +72,10 @@ public class FilmService {
             filmsToReturn.add(allFilms.get(i));
         }
         return filmsToReturn;
+    }
+
+    public List<Film> getTopMostLikedFilms(int topCount) {
+       return filmStorage.getTopMostLikedFilms(topCount);
     }
 
     // методы для валидации

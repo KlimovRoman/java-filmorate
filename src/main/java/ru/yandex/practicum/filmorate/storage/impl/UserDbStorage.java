@@ -16,8 +16,8 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Primary
@@ -119,5 +119,27 @@ public class UserDbStorage implements UserStorage {
         getUserById(id).orElseThrow(() -> new EntityNotFoundException("Юзер, который необходимо обновить не найден в базе"));
         String sql = "select * from friendship f left join users u on f.friend_id = u.id where user_id = ?";
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs),id);
+    }
+
+    @Override
+    public List<User> getCommonFriends(int id, int otherId) {
+        List<User> listForReturn = new ArrayList<>();
+        getUserById(id).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
+        getUserById(otherId).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
+        List<User> friendsList1 = getUserFriends(id);
+        List<User> friendsList2 = getUserFriends(otherId);
+        Set<Integer> frSet1 = new HashSet<>();
+        Set<Integer> frSet2 = new HashSet<>();
+        for(User usr: friendsList1) {
+            frSet1.add(usr.getId());
+        }
+        for(User usr: friendsList2) {
+            frSet2.add(usr.getId());
+        }
+        Set<Integer> commonFriendsIds = frSet1.stream().filter(frSet2::contains).collect(Collectors.toSet()); //нашли пересечение
+        for(Integer idd: commonFriendsIds) {
+            listForReturn.add(getUserById(idd).get());
+        }
+        return listForReturn; //доcтали пользоваетелей и упокавали в список
     }
 }

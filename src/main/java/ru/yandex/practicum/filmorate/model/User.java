@@ -30,13 +30,4 @@ public class User {
         this.id = id;
     }
 
-    public void addFriend(int idFriend) {
-        friends.add(idFriend);
-    }
-
-    public void delFriend(int idFriend) {
-        if (friends.contains(idFriend)) {
-            friends.remove(idFriend);
-        }
-    }
 }

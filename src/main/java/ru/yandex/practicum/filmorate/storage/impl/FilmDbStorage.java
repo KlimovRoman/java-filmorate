@@ -18,6 +18,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -125,6 +126,12 @@ public class FilmDbStorage implements FilmStorage {
        if(count == 0) {
            throw new  EntityNotFoundException("Фильм не найден в базе");
        }
+    }
+
+    @Override
+    public List<Film> getTopMostLikedFilms(int topCount) {
+        String sql = "select f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id, count(user_id) from likes l left join films f on l.film_id = f.id left join  rating r on f.rating_id = r.mpa_id group by f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id order by count(user_id) desc limit ?";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),topCount);
     }
 
 }
