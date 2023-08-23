@@ -14,7 +14,7 @@ public class User {
     @Email
     private String email;
     @JsonIgnore
-    private Set<Integer> friends = new HashSet<>();
+    private Set<Integer> friends = new HashSet<>(); // удалить
 
     @NotBlank @Pattern(regexp = "\\S+")
     private String login;

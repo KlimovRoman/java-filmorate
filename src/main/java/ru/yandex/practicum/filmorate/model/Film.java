@@ -1,25 +1,21 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
-
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedHashSet;
 
 @Data
 public class Film {
     private int id;
-    @JsonIgnore
-    private Set<Integer> likes = new HashSet<>();
+    private LinkedHashSet<Genre> genres = new LinkedHashSet<>(); // создать в модели
+    private Mpa mpa = new Mpa();
     @NotBlank
     private String name;
-    @Size(max = 200)
+    @NotNull @Size(max = 200)
     private String description;
     @NotNull
     private LocalDate releaseDate;
@@ -33,17 +29,8 @@ public class Film {
     public Film() {
     }
 
-    public void addLike(int userId) {
-        likes.add(userId);
-    }
-
-    public void delLike(int userId) {
-        if (!likes.remove(userId)) { //Вернет boolean в зависимости от того, было что-то удалено или нет - 11 тз
-            throw new EntityNotFoundException("Лайк не найден!");
-        }
-    }
 
     public long getLikesCount() {
-        return likes.size();
+        return 0;//доделать или удалить
     }
 }
