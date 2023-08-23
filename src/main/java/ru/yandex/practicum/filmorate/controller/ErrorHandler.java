@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.ErrorResponse;
 
 import javax.validation.ConstraintViolationException;
-import java.sql.SQLException;
 
 @Slf4j
 @RestControllerAdvice
