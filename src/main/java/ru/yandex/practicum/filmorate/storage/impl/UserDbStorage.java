@@ -9,7 +9,6 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -97,5 +96,28 @@ public class UserDbStorage implements UserStorage {
         user.setEmail(rs.getString("email"));
         user.setBirthday(rs.getDate("birthday").toLocalDate());
         return user;
+    }
+
+    @Override
+    public void addFriend(int userId, int friendId) {
+        String sqlQuery = "insert into friendship(user_id, friend_id) " +
+                "values (?, ?)";
+        jdbcTemplate.update(sqlQuery, userId, friendId);
+    }
+
+    @Override
+    public void delFriend(int userId, int friendId) {
+        String sqlQuery = "delete from friendship where user_id = " + userId + " and friend_id = " + friendId;
+        int count =  jdbcTemplate.update(sqlQuery);
+        if(count == 0) {
+            throw new  EntityNotFoundException("Юзер не найден в базе");
+        }
+    }
+
+    @Override
+    public List<User> getUserFriends(int id) {
+        getUserById(id).orElseThrow(() -> new EntityNotFoundException("Юзер, который необходимо обновить не найден в базе"));
+        String sql = "select * from friendship f left join users u on f.friend_id = u.id where user_id = ?";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs),id);
     }
 }

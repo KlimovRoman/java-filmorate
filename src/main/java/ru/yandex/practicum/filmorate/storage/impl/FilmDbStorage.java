@@ -120,7 +120,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void delLike(int filmId, int userLikeId) {
-        String sqlQuery = "delete from likes where film_id = " + filmId + " and user_id = " + userLikeId ;
+       String sqlQuery = "delete from likes where film_id = " + filmId + " and user_id = " + userLikeId ;
        int count =  jdbcTemplate.update(sqlQuery);
        if(count == 0) {
            throw new  EntityNotFoundException("Фильм не найден в базе");
