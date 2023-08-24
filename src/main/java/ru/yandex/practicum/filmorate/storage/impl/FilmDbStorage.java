@@ -140,7 +140,7 @@ public class FilmDbStorage implements FilmStorage {
         return film;
     }
 
-    private Optional<Film> filmMapper(SqlRowSet filmRows ) {
+    private Optional<Film> filmMapper(SqlRowSet filmRows) {
         if (filmRows.next()) {
             Film film = new Film();
             film.setId(filmRows.getInt("id"));
@@ -154,5 +154,4 @@ public class FilmDbStorage implements FilmStorage {
             return Optional.empty();
         }
     }
-
 }
