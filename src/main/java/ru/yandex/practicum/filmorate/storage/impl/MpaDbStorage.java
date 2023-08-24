@@ -30,7 +30,7 @@ public class MpaDbStorage implements MpaStorage {
     }
 
     private Mpa makeMpa(ResultSet rs) throws SQLException {
-        int id = rs.getInt("id");
+        int id = rs.getInt("mpa_id");
         String name = rs.getString("name_rating");
         return new Mpa(id, name);
     }
@@ -38,10 +38,10 @@ public class MpaDbStorage implements MpaStorage {
     @Override
     public Optional<Mpa> getMpaById(int id) {
         // полученный фильм пока не обогащен рейтингом
-        String sql = "select * from rating where id =?";
+        String sql = "select * from rating where mpa_id =?";
         SqlRowSet mpaRows = jdbcTemplate.queryForRowSet(sql, id);
         if(mpaRows.next()) {
-            int mpaId = mpaRows.getInt("id");
+            int mpaId = mpaRows.getInt("mpa_id");
             String name = mpaRows.getString("name_rating");
             Mpa mpa = new Mpa(mpaId,name);
             return Optional.of(mpa);

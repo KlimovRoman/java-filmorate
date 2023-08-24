@@ -100,6 +100,8 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void addFriend(int userId, int friendId) {
+        getUserById(userId).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
+        getUserById(friendId).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
         String sqlQuery = "insert into friendship(user_id, friend_id) " +
                 "values (?, ?)";
         jdbcTemplate.update(sqlQuery, userId, friendId);
@@ -107,10 +109,12 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void delFriend(int userId, int friendId) {
+        getUserById(userId).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
+        getUserById(friendId).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
         String sqlQuery = "delete from friendship where user_id = " + userId + " and friend_id = " + friendId;
         int count =  jdbcTemplate.update(sqlQuery);
         if(count == 0) {
-            throw new  EntityNotFoundException("Юзер не найден в базе");
+            throw new  EntityNotFoundException("Юзер не найден в базе(удаление не прошло)");
         }
     }
 

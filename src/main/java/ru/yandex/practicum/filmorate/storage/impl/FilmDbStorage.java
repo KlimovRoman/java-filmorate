@@ -10,12 +10,14 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,21 +55,41 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film updFilm(Film filmToUpd) {
+        int id = filmToUpd.getId();
         getFilmById(filmToUpd.getId()).orElseThrow(() -> new EntityNotFoundException("Фильм, который необходимо обновить не найден в базе"));
         String sqlQuery = "update films set " +
                 "rating_id = ?, name = ?, description = ?, release_date = ?, duration = ? " +
                 "where id = ?";
-        jdbcTemplate.update(sqlQuery
-                , filmToUpd.getMpa().getId()
-                , filmToUpd.getName()
-                , filmToUpd.getDescription()
-                , Date.valueOf(filmToUpd.getReleaseDate())
-                , filmToUpd.getDuration()
-                , filmToUpd.getId());
+        jdbcTemplate.update(sqlQuery,
+                 filmToUpd.getMpa().getId(),
+                 filmToUpd.getName(),
+                 filmToUpd.getDescription(),
+                 Date.valueOf(filmToUpd.getReleaseDate()),
+                 filmToUpd.getDuration(),
+                 filmToUpd.getId());
+        LinkedHashSet<Genre> genres =  filmToUpd.getGenres();
 
+        delAllGenresFromFilm(id); //удаляем все существующие жанры по фильму из таблицы genre_films
+        //в цикле прогоняем все жанры и записываем в таблицу genre_films/
+        for(Genre genre: genres) {
+            if(genre != null){
+                int genre_id = genre.getId();
+                addGenresFilm(id,genre_id);
+            }
+        }
         return getFilmById(filmToUpd.getId()).orElseThrow(() -> new EntityNotFoundException("Фильм не найден в базе"));
     }
 
+    private void addGenresFilm(int filmId, int genreId) {
+        String sqlQuery = "insert into genre_films(genre_id, film_id) " +
+                "values (?, ?)";
+        jdbcTemplate.update(sqlQuery, genreId, filmId);
+    }
+
+    private void delAllGenresFromFilm(int filmId) {
+        String sqlQuery = "delete from genre_films where film_id = " + filmId;
+        int count =  jdbcTemplate.update(sqlQuery);
+    }
 
 
     @Override
