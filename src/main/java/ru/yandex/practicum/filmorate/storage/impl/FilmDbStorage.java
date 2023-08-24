@@ -152,7 +152,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getTopMostLikedFilms(int topCount) {
         log.info("отработка DAO POPULAR count " + topCount);
-        String sql = "select f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id, count(user_id) from likes l left join films f on l.film_id = f.id left join  rating r on f.rating_id = r.mpa_id group by f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id order by count(user_id) desc limit ?";
+        String sql = "select f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id, count(user_id) from films f  left join likes l on l.film_id = f.id left join  rating r on f.rating_id = r.mpa_id group by f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id order by count(user_id) desc limit ?";
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),topCount);
     }
 
