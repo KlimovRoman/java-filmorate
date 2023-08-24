@@ -75,7 +75,7 @@ public class GenreDbStorage implements GenreStorage {
     }
 
     @Override
-    public int[] gernesBatchInsert(LinkedHashSet<Genre> genres, int filmId ) {
+    public int[] gernesBatchInsert(LinkedHashSet<Genre> genres, int filmId) {
         List<Integer> genreIds = new ArrayList<>();
         for (Genre genre: genres) {
             if (genre != null) {
@@ -88,7 +88,7 @@ public class GenreDbStorage implements GenreStorage {
                 new BatchPreparedStatementSetter() {
                     public void setValues(PreparedStatement ps, int i) throws SQLException {
                         ps.setInt(1, genreIds.get(i));
-                        ps.setInt(2, filmId );
+                        ps.setInt(2, filmId);
                     }
 
                     public int getBatchSize() {
