@@ -54,7 +54,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public void addLike(int i, int u){
+    public void addLike(int i, int u) {
 
     }
 
@@ -63,7 +63,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     }
 
-    public List<Film> getTopMostLikedFilms(int topCount){
+    public List<Film> getTopMostLikedFilms(int topCount) {
         return null;
     }
 }
