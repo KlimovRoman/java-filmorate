@@ -20,7 +20,7 @@ public class MpaDbStorage implements MpaStorage {
 
     @Autowired
     public MpaDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate=jdbcTemplate;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class MpaDbStorage implements MpaStorage {
         // полученный фильм пока не обогащен рейтингом
         String sql = "select * from rating where mpa_id =?";
         SqlRowSet mpaRows = jdbcTemplate.queryForRowSet(sql, id);
-        if(mpaRows.next()) {
+        if (mpaRows.next()) {
             int mpaId = mpaRows.getInt("mpa_id");
             String name = mpaRows.getString("name_rating");
             Mpa mpa = new Mpa(mpaId,name);
