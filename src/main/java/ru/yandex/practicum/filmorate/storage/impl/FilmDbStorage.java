@@ -72,9 +72,9 @@ public class FilmDbStorage implements FilmStorage {
         delAllGenresFromFilm(filmId); //удаляем все существующие жанры по фильму из таблицы genre_films
         //в цикле прогоняем все жанры и записываем в таблицу genre_films/
         for(Genre genre: genres) {
-            if(genre != null){
-                int genre_id = genre.getId();
-                addGenresFilm(filmId,genre_id);
+            if(genre != null) {
+                int genreId = genre.getId();
+                addGenresFilm(filmId,genreId);
             }
         }
         return getFilmById(filmToUpd.getId()).orElseThrow(() -> new EntityNotFoundException("Фильм не найден в базе"));
@@ -101,7 +101,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private Film makeFilm(ResultSet rs) throws SQLException {
-        log.info("отработка DAO makeFilm POPULAR count " );
+        log.info("отработка DAO makeFilm POPULAR count ");
         Film film = new Film();
         film.setId(rs.getInt("id"));
         film.setDescription(rs.getString("description"));
@@ -118,7 +118,7 @@ public class FilmDbStorage implements FilmStorage {
         // полученный фильм пока не обогащен жанрами
         String sql = "select * from films f join rating r on f.rating_id = r.mpa_id where f.id = ?";
         SqlRowSet filmRows = jdbcTemplate.queryForRowSet(sql, id);
-        if(filmRows.next()) {
+        if (filmRows.next()) {
            Film film = new Film();
            film.setId(filmRows.getInt("id"));
            film.setDescription(filmRows.getString("description"));
@@ -142,9 +142,9 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void delLike(int filmId, int userLikeId) {
-       String sqlQuery = "delete from likes where film_id = " + filmId + " and user_id = " + userLikeId ;
+       String sqlQuery = "delete from likes where film_id = " + filmId + " and user_id = " + userLikeId;
        int count =  jdbcTemplate.update(sqlQuery);
-       if(count == 0) {
+       if (count == 0) {
            throw new  EntityNotFoundException("Фильм не найден в базе");
        }
     }
