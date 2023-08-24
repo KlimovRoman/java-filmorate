@@ -16,5 +16,5 @@ public interface GenreStorage {
 
     public List<Genre> getGenres();
 
-    public int[] gernesBatchInsert(LinkedHashSet<Genre> genres, int filmId );
+    public int[] gernesBatchInsert(LinkedHashSet<Genre> genres, int filmId);
 }
