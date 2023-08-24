@@ -55,7 +55,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film updFilm(Film filmToUpd) {
-        int id = filmToUpd.getId();
+        int filmId = filmToUpd.getId();
         getFilmById(filmToUpd.getId()).orElseThrow(() -> new EntityNotFoundException("Фильм, который необходимо обновить не найден в базе"));
         String sqlQuery = "update films set " +
                 "rating_id = ?, name = ?, description = ?, release_date = ?, duration = ? " +
@@ -69,12 +69,12 @@ public class FilmDbStorage implements FilmStorage {
                  filmToUpd.getId());
         LinkedHashSet<Genre> genres =  filmToUpd.getGenres();
 
-        delAllGenresFromFilm(id); //удаляем все существующие жанры по фильму из таблицы genre_films
+        delAllGenresFromFilm(filmId); //удаляем все существующие жанры по фильму из таблицы genre_films
         //в цикле прогоняем все жанры и записываем в таблицу genre_films/
         for(Genre genre: genres) {
             if(genre != null){
                 int genre_id = genre.getId();
-                addGenresFilm(id,genre_id);
+                addGenresFilm(filmId,genre_id);
             }
         }
         return getFilmById(filmToUpd.getId()).orElseThrow(() -> new EntityNotFoundException("Фильм не найден в базе"));
@@ -84,6 +84,7 @@ public class FilmDbStorage implements FilmStorage {
         String sqlQuery = "insert into genre_films(genre_id, film_id) " +
                 "values (?, ?)";
         jdbcTemplate.update(sqlQuery, genreId, filmId);
+
     }
 
     private void delAllGenresFromFilm(int filmId) {
@@ -100,6 +101,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private Film makeFilm(ResultSet rs) throws SQLException {
+        log.info("отработка DAO makeFilm POPULAR count " );
         Film film = new Film();
         film.setId(rs.getInt("id"));
         film.setDescription(rs.getString("description"));
@@ -149,6 +151,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getTopMostLikedFilms(int topCount) {
+        log.info("отработка DAO POPULAR count " + topCount);
         String sql = "select f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id, count(user_id) from likes l left join films f on l.film_id = f.id left join  rating r on f.rating_id = r.mpa_id group by f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id order by count(user_id) desc limit ?";
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),topCount);
     }

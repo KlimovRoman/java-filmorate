@@ -32,12 +32,16 @@ public class FilmService {
 
     public Film addFilm(Film filmToAdd) {
         releaseDateValid(filmToAdd);
-        return filmStorage.addFilm(filmToAdd);
+        Film film = filmStorage.addFilm(filmToAdd);
+        genreStorage.loadGenresForOneFilm(film);
+        return film;
     }
 
     public Film updFilm(Film filmToUpd) {
         releaseDateValid(filmToUpd);
-        return filmStorage.updFilm(filmToUpd);
+        Film filmAfterUpd = filmStorage.updFilm(filmToUpd);
+        genreStorage.loadGenresForOneFilm(filmAfterUpd); //обогатили фильмы жанрами
+        return filmAfterUpd;
     }
 
     public List<Film> getFilms() {
@@ -75,7 +79,9 @@ public class FilmService {
     }
 
     public List<Film> getTopMostLikedFilms(int topCount) {
-       return filmStorage.getTopMostLikedFilms(topCount);
+        log.info("отработка Сервиса POPULAR count " + topCount);
+        return filmStorage.getTopMostLikedFilms(topCount);
+
     }
 
     // методы для валидации

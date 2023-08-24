@@ -49,7 +49,7 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public void loadGenresForOneFilm(Film film) {
-        String sql = "select * from genre_films gf left join genre g on gf.genre_id = g.id where id = ?";
+        String sql = "select * from genre_films gf left join genre g on gf.genre_id = g.id where film_id = ?";
         List<Genre> genresForOneFilm = jdbcTemplate.query(sql, (rs, rowNum) -> makeGenre(rs),film.getId());
         for(Genre genre: genresForOneFilm) {
             film.getGenres().add(genre);
@@ -62,7 +62,9 @@ public class GenreDbStorage implements GenreStorage {
         int genre_id = rs.getInt("genre_id");
         String name = rs.getString("name_genre");
         Genre genre = new Genre(genre_id,name);
-        films.get(film_id).getGenres().add(genre);
+        if(films.contains(film_id)){
+            films.get(film_id).getGenres().add(genre);
+        }
         return genre;
     }
 
