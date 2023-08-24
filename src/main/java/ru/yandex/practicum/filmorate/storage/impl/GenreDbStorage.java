@@ -26,7 +26,7 @@ public class GenreDbStorage implements GenreStorage {
 
     @Autowired
     public GenreDbStorage(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedJdbcTemplate) {
-        this.jdbcTemplate=jdbcTemplate;
+        this.jdbcTemplate = jdbcTemplate;
         this.namedJdbcTemplate = namedJdbcTemplate;
     }
 
@@ -34,7 +34,7 @@ public class GenreDbStorage implements GenreStorage {
     public void loadGenresForFilm(List<Film> films) {
 
         List<Integer> ids = new ArrayList<>();
-        for(Film film: films) {
+        for (Film film: films) {
             ids.add(film.getId()); //создаем список айдишников
         }
 
@@ -51,19 +51,19 @@ public class GenreDbStorage implements GenreStorage {
     public void loadGenresForOneFilm(Film film) {
         String sql = "select * from genre_films gf left join genre g on gf.genre_id = g.id where film_id = ?";
         List<Genre> genresForOneFilm = jdbcTemplate.query(sql, (rs, rowNum) -> makeGenre(rs),film.getId());
-        for(Genre genre: genresForOneFilm) {
+        for (Genre genre: genresForOneFilm) {
             film.getGenres().add(genre);
         }
     }
 
 
     private Genre makeGenreForFilm(ResultSet rs, List<Film> films) throws SQLException {
-        int film_id = rs.getInt("film_id");
-        int genre_id = rs.getInt("genre_id");
+        int filmId = rs.getInt("film_id");
+        int genreId = rs.getInt("genre_id");
         String name = rs.getString("name_genre");
-        Genre genre = new Genre(genre_id,name);
-        if(films.contains(film_id)){
-            films.get(film_id).getGenres().add(genre);
+        Genre genre = new Genre(genreId,name);
+        if (films.contains(filmId)) {
+            films.get(filmId).getGenres().add(genre);
         }
         return genre;
     }
@@ -84,7 +84,7 @@ public class GenreDbStorage implements GenreStorage {
     public Optional<Genre> getGenreById(int id) {
         String sql = "select * from genre where id =?";
         SqlRowSet genreRows = jdbcTemplate.queryForRowSet(sql, id);
-        if(genreRows.next()) {
+        if (genreRows.next()) {
             int genreId = genreRows.getInt("id");
             String name = genreRows.getString("name_genre");
             Genre genre = new Genre(genreId,name);
