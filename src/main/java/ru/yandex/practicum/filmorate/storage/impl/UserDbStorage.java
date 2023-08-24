@@ -44,8 +44,8 @@ public class UserDbStorage implements UserStorage {
             return stmt;
         }, keyHolder);
         int newFilmID =  keyHolder.getKey().intValue();
-        //используем метод getUserById, чтобы убедиться что объект корректно добавлен в бд
-        return  getUserById(newFilmID).orElseThrow(() -> new EntityNotFoundException("Юзер не найден в базе (был некорректно добавлен)"));
+        userToAdd.setId(newFilmID);
+        return userToAdd;
     }
 
     @Override
@@ -53,18 +53,10 @@ public class UserDbStorage implements UserStorage {
         // полученный юзер пока не обогащен друзьями
         String sql = "select * from users where id = ?";
         SqlRowSet userRows = jdbcTemplate.queryForRowSet(sql, id);
-        if (userRows.next()) {
-            User user = new User();
-            user.setId(userRows.getInt("id"));
-            user.setName(userRows.getString("name"));
-            user.setLogin(userRows.getString("login"));
-            user.setEmail(userRows.getString("email"));
-            user.setBirthday(userRows.getDate("birthday").toLocalDate());
-            return Optional.of(user);
-        } else {
-            return Optional.empty();
-        }
+        return userMapper(userRows);
     }
+
+
 
     @Override
     public User updUser(User userToUpd) {
@@ -78,8 +70,7 @@ public class UserDbStorage implements UserStorage {
                  userToUpd.getEmail(),
                  Date.valueOf(userToUpd.getBirthday()),
                  userToUpd.getId());
-
-        return getUserById(userToUpd.getId()).orElseThrow(() -> new EntityNotFoundException("Юзер не найден в базе"));
+        return userToUpd;
     }
 
     @Override
@@ -88,20 +79,9 @@ public class UserDbStorage implements UserStorage {
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs));
     }
 
-    private User makeUser(ResultSet rs) throws SQLException {
-        User user = new User();
-        user.setId(rs.getInt("id"));
-        user.setName(rs.getString("name"));
-        user.setLogin(rs.getString("login"));
-        user.setEmail(rs.getString("email"));
-        user.setBirthday(rs.getDate("birthday").toLocalDate());
-        return user;
-    }
 
     @Override
     public void addFriend(int userId, int friendId) {
-        getUserById(userId).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
-        getUserById(friendId).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
         String sqlQuery = "insert into friendship(user_id, friend_id) " +
                 "values (?, ?)";
         jdbcTemplate.update(sqlQuery, userId, friendId);
@@ -109,8 +89,6 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void delFriend(int userId, int friendId) {
-        getUserById(userId).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
-        getUserById(friendId).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
         String sqlQuery = "delete from friendship where user_id = " + userId + " and friend_id = " + friendId;
         int count =  jdbcTemplate.update(sqlQuery);
         if (count == 0) {
@@ -120,16 +98,13 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getUserFriends(int id) {
-        getUserById(id).orElseThrow(() -> new EntityNotFoundException("Юзер, который необходимо обновить не найден в базе"));
         String sql = "select * from friendship f left join users u on f.friend_id = u.id where user_id = ?";
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs),id);
     }
 
-    @Override
-    public List<User> getCommonFriends(int id, int otherId) {
+
+    public List<User> getCommonFriendsDEL(int id, int otherId) {
         List<User> listForReturn = new ArrayList<>();
-        getUserById(id).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
-        getUserById(otherId).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
         List<User> friendsList1 = getUserFriends(id);
         List<User> friendsList2 = getUserFriends(otherId);
         Set<Integer> frSet1 = new HashSet<>();
@@ -145,5 +120,47 @@ public class UserDbStorage implements UserStorage {
             listForReturn.add(getUserById(idd).get());
         }
         return listForReturn; //доcтали пользоваетелей и упокавали в список
+    }
+
+    @Override
+    public List<User> getCommonFriends(int id, int otherId) {
+        List<User> listForReturn = new ArrayList<>();
+        String sql = "select f.FRIEND_ID  \n" +
+                "from friendship f left join users u on f.friend_id = u.id\n" +
+                "where user_id = " + id + "\n" +
+                "INTERSECT\n" +
+                "select f.FRIEND_ID  \n" +
+                "from friendship f left join users u on f.friend_id = u.id\n" +
+                "where user_id = " + otherId;
+        return  jdbcTemplate.query(sql, (rs, rowNum) -> commonFriendsMapper(rs));
+    }
+
+    private User commonFriendsMapper(ResultSet rs) throws SQLException {
+        int friendId = rs.getInt("FRIEND_ID");
+        return getUserById(friendId).get();
+    }
+
+    private Optional<User> userMapper(SqlRowSet userRows) {
+        if (userRows.next()) {
+            User user = new User();
+            user.setId(userRows.getInt("id"));
+            user.setName(userRows.getString("name"));
+            user.setLogin(userRows.getString("login"));
+            user.setEmail(userRows.getString("email"));
+            user.setBirthday(userRows.getDate("birthday").toLocalDate());
+            return Optional.of(user);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private User makeUser(ResultSet rs) throws SQLException {
+        User user = new User();
+        user.setId(rs.getInt("id"));
+        user.setName(rs.getString("name"));
+        user.setLogin(rs.getString("login"));
+        user.setEmail(rs.getString("email"));
+        user.setBirthday(rs.getDate("birthday").toLocalDate());
+        return user;
     }
 }

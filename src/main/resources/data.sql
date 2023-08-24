@@ -1,15 +1,31 @@
-INSERT INTO genre (name_genre) VALUES ('Комедия');
-INSERT INTO genre (name_genre) VALUES ('Драма');
-INSERT INTO genre (name_genre) VALUES ('Мультфильм');
-INSERT INTO genre (name_genre) VALUES ('Триллер');
-INSERT INTO genre (name_genre) VALUES ('Документальный');
-INSERT INTO genre (name_genre) VALUES ('Боевик');
+--INSERT INTO genre (name_genre) VALUES ('Комедия');
+--INSERT INTO genre (name_genre) VALUES ('Драма');
+--INSERT INTO genre (name_genre) VALUES ('Мультфильм');
+--INSERT INTO genre (name_genre) VALUES ('Триллер');
+--INSERT INTO genre (name_genre) VALUES ('Документальный');
+--INSERT INTO genre (name_genre) VALUES ('Боевик');
 
-INSERT INTO rating (name_rating) VALUES ('G');
-INSERT INTO rating (name_rating) VALUES ('PG');
-INSERT INTO rating (name_rating) VALUES ('PG-13');
-INSERT INTO rating (name_rating) VALUES ('R');
-INSERT INTO rating (name_rating) VALUES ('NC-17');
+--INSERT INTO rating (name_rating) VALUES ('G');
+--INSERT INTO rating (name_rating) VALUES ('PG');
+--INSERT INTO rating (name_rating) VALUES ('PG-13');
+--INSERT INTO rating (name_rating) VALUES ('R');
+--INSERT INTO rating (name_rating) VALUES ('NC-17');
+
+INSERT into rating (name_rating)
+values ('G'),
+       ('PG'),
+       ('PG-13'),
+       ('R'),
+       ('NC-17');
+
+INSERT into genre (name_genre)
+values     ('Комедия'),
+           ('Драма'),
+           ('Мультфильм'),
+           ('Триллер'),
+           ('Документальный'),
+           ('Боевик');
+
 
 
 --INSERT INTO films (rating_id,name,description,release_date,duration) VALUES (1,'name','desc','2022-03-28 19:22:29.000000',5);

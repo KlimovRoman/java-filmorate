@@ -11,7 +11,9 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -27,10 +29,12 @@ import java.util.Optional;
 @Component
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final GenreStorage  genreStorage;
 
     @Autowired
-    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
+    public FilmDbStorage(JdbcTemplate jdbcTemplate, GenreStorage  genreStorage) {
         this.jdbcTemplate = jdbcTemplate;
+        this.genreStorage = genreStorage;
     }
 
     @Override
@@ -48,8 +52,11 @@ public class FilmDbStorage implements FilmStorage {
             return stmt;
         }, keyHolder);
         int newFilmID =  keyHolder.getKey().intValue();
-        //переиспользуем метод, чтобы обогатить объект рейтингом mpa
-        return  getFilmById(newFilmID).orElseThrow(() -> new EntityNotFoundException("Фильм не найден в базе"));
+        filmToAdd.setId(newFilmID);
+        LinkedHashSet<Genre> genres =  filmToAdd.getGenres();
+        //теперь инсертим жанры одним батчом
+        genreStorage.gernesBatchInsert(genres, newFilmID);
+        return filmToAdd;
     }
 
 
@@ -68,28 +75,10 @@ public class FilmDbStorage implements FilmStorage {
                  filmToUpd.getDuration(),
                  filmToUpd.getId());
         LinkedHashSet<Genre> genres =  filmToUpd.getGenres();
-
         delAllGenresFromFilm(filmId); //удаляем все существующие жанры по фильму из таблицы genre_films
-        //в цикле прогоняем все жанры и записываем в таблицу genre_films/
-        for (Genre genre: genres) {
-            if (genre != null) {
-                int genreId = genre.getId();
-                addGenresFilm(filmId,genreId);
-            }
-        }
-        return getFilmById(filmToUpd.getId()).orElseThrow(() -> new EntityNotFoundException("Фильм не найден в базе"));
-    }
-
-    private void addGenresFilm(int filmId, int genreId) {
-        String sqlQuery = "insert into genre_films(genre_id, film_id) " +
-                "values (?, ?)";
-        jdbcTemplate.update(sqlQuery, genreId, filmId);
-
-    }
-
-    private void delAllGenresFromFilm(int filmId) {
-        String sqlQuery = "delete from genre_films where film_id = " + filmId;
-        int count =  jdbcTemplate.update(sqlQuery);
+        // теперь инсертим жанры одним батчом
+        genreStorage.gernesBatchInsert(genres, filmId);
+        return filmToUpd;
     }
 
 
@@ -100,38 +89,15 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs));
     }
 
-    private Film makeFilm(ResultSet rs) throws SQLException {
-        log.info("отработка DAO makeFilm POPULAR count ");
-        Film film = new Film();
-        film.setId(rs.getInt("id"));
-        film.setDescription(rs.getString("description"));
-        film.setName(rs.getString("name"));
-        film.setDuration(rs.getDouble("duration"));
-        film.setReleaseDate(rs.getDate("release_date").toLocalDate());
-        film.getMpa().setName(rs.getString("name_rating"));
-        film.getMpa().setId(rs.getInt("mpa_id"));
-        return film;
-    }
 
     @Override
     public Optional<Film> getFilmById(int id) {
         // полученный фильм пока не обогащен жанрами
         String sql = "select * from films f join rating r on f.rating_id = r.mpa_id where f.id = ?";
         SqlRowSet filmRows = jdbcTemplate.queryForRowSet(sql, id);
-        if (filmRows.next()) {
-           Film film = new Film();
-           film.setId(filmRows.getInt("id"));
-           film.setDescription(filmRows.getString("description"));
-           film.setName(filmRows.getString("name"));
-           film.setDuration(filmRows.getDouble("duration"));
-           film.setReleaseDate(filmRows.getDate("release_date").toLocalDate());
-           film.getMpa().setName(filmRows.getString("name_rating"));
-           film.getMpa().setId(filmRows.getInt("mpa_id"));
-           return Optional.of(film);
-        } else {
-           return Optional.empty();
-        }
+        return filmMapper(filmRows);
     }
+
 
     @Override
     public void addLike(int filmId, int userLikeId) {
@@ -154,6 +120,39 @@ public class FilmDbStorage implements FilmStorage {
         log.info("отработка DAO POPULAR count " + topCount);
         String sql = "select f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id, count(user_id) from films f  left join likes l on l.film_id = f.id left join  rating r on f.rating_id = r.mpa_id group by f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id order by count(user_id) desc limit ?";
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),topCount);
+    }
+
+
+    private void delAllGenresFromFilm(int filmId) {
+        String sqlQuery = "delete from genre_films where film_id = " + filmId;
+        int count =  jdbcTemplate.update(sqlQuery);
+    }
+
+    private Film makeFilm(ResultSet rs) throws SQLException {
+        log.info("отработка DAO makeFilm POPULAR count ");
+        Film film = new Film();
+        film.setId(rs.getInt("id"));
+        film.setDescription(rs.getString("description"));
+        film.setName(rs.getString("name"));
+        film.setDuration(rs.getDouble("duration"));
+        film.setReleaseDate(rs.getDate("release_date").toLocalDate());
+        film.setMpa(new Mpa(rs.getInt("mpa_id"), rs.getString("name_rating")));
+        return film;
+    }
+
+    private Optional<Film> filmMapper(SqlRowSet filmRows ) {
+        if (filmRows.next()) {
+            Film film = new Film();
+            film.setId(filmRows.getInt("id"));
+            film.setDescription(filmRows.getString("description"));
+            film.setName(filmRows.getString("name"));
+            film.setDuration(filmRows.getDouble("duration"));
+            film.setReleaseDate(filmRows.getDate("release_date").toLocalDate());
+            film.setMpa(new Mpa(filmRows.getInt("mpa_id"), filmRows.getString("name_rating")));
+            return Optional.of(film);
+        } else {
+            return Optional.empty();
+        }
     }
 
 }

@@ -29,17 +29,16 @@ public class MpaDbStorage implements MpaStorage {
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeMpa(rs));
     }
 
-    private Mpa makeMpa(ResultSet rs) throws SQLException {
-        int id = rs.getInt("mpa_id");
-        String name = rs.getString("name_rating");
-        return new Mpa(id, name);
-    }
 
     @Override
     public Optional<Mpa> getMpaById(int id) {
         // полученный фильм пока не обогащен рейтингом
         String sql = "select * from rating where mpa_id =?";
         SqlRowSet mpaRows = jdbcTemplate.queryForRowSet(sql, id);
+        return mpaMapper(mpaRows);
+    }
+
+    private Optional<Mpa> mpaMapper(SqlRowSet mpaRows) {
         if (mpaRows.next()) {
             int mpaId = mpaRows.getInt("mpa_id");
             String name = mpaRows.getString("name_rating");
@@ -48,5 +47,11 @@ public class MpaDbStorage implements MpaStorage {
         } else {
             return Optional.empty();
         }
+    }
+
+    private Mpa makeMpa(ResultSet rs) throws SQLException {
+        int id = rs.getInt("mpa_id");
+        String name = rs.getString("name_rating");
+        return new Mpa(id, name);
     }
 }

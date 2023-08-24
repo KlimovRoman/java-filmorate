@@ -12,7 +12,8 @@ import java.util.LinkedHashSet;
 public class Film {
     private int id;
     private LinkedHashSet<Genre> genres = new LinkedHashSet<>(); // создать в модели
-    private Mpa mpa = new Mpa();
+    @NotNull
+    private Mpa mpa; // = new Mpa(); // без этого ломается все
     @NotBlank
     private String name;
     @NotNull @Size(max = 200)
@@ -27,10 +28,5 @@ public class Film {
     }
 
     public Film() {
-    }
-
-
-    public long getLikesCount() {
-        return 0;//доделать или удалить
     }
 }

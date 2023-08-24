@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -18,30 +17,24 @@ import java.util.*;
 public class FilmService {
     private final FilmStorage filmStorage; //поле куда будет передано хранилище через контструктор с помощью зависимостей
     private final GenreStorage genreStorage;
-    private Comparator<Film> comparatorForTopLikes;
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final LocalDate dateForCompare =  LocalDate.parse("1895-12-28",formatter);
 
     //связали зависимостью  сервис и хранилище
     @Autowired
-    public FilmService(FilmStorage filmStorage, Comparator<Film> comparatorForTopLikes, GenreStorage genreStorage) {
+    public FilmService(FilmStorage filmStorage, GenreStorage genreStorage) {
         this.filmStorage = filmStorage;
-        this.comparatorForTopLikes = comparatorForTopLikes;
         this.genreStorage = genreStorage;
     }
 
     public Film addFilm(Film filmToAdd) {
         releaseDateValid(filmToAdd);
-        Film film = filmStorage.addFilm(filmToAdd);
-        genreStorage.loadGenresForOneFilm(film);
-        return film;
+        return filmStorage.addFilm(filmToAdd);
     }
 
     public Film updFilm(Film filmToUpd) {
         releaseDateValid(filmToUpd);
-        Film filmAfterUpd = filmStorage.updFilm(filmToUpd);
-        genreStorage.loadGenresForOneFilm(filmAfterUpd); //обогатили фильмы жанрами
-        return filmAfterUpd;
+         return filmStorage.updFilm(filmToUpd);
     }
 
     public List<Film> getFilms() {
@@ -61,27 +54,15 @@ public class FilmService {
 
     public Film getFilmById(int id) {
        Film film =  filmStorage.getFilmById(id).orElseThrow(() -> new EntityNotFoundException("Фильм не найден в базе"));
-       genreStorage.loadGenresForOneFilm(film);
+       genreStorage.loadGenresForFilm(List.of(film));
        return film;
-    }
-
-    public List<Film> getTopMostLikedFilmsDEL(int topCount) {
-        List<Film> filmsToReturn = new ArrayList<>();
-        List<Film> allFilms = filmStorage.getFilms();
-        allFilms.sort(comparatorForTopLikes);
-        if (topCount > allFilms.size()) {
-            topCount = allFilms.size(); // на случай если фильмов меньше чем запрошенное кол-во
-        }
-        for (int i = 0; i < topCount; i++) {
-            filmsToReturn.add(allFilms.get(i));
-        }
-        return filmsToReturn;
     }
 
     public List<Film> getTopMostLikedFilms(int topCount) {
         log.info("отработка Сервиса POPULAR count " + topCount);
-        return filmStorage.getTopMostLikedFilms(topCount);
-
+        List<Film> listForGenresUpd = filmStorage.getTopMostLikedFilms(topCount);
+        genreStorage.loadGenresForFilm(listForGenresUpd);
+        return listForGenresUpd;
     }
 
     // методы для валидации

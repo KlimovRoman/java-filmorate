@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS users
     email varchar(100),
     birthday timestamp
 );
+create unique index if not exists USER_EMAIL_UINDEX on USERS (email);
+create unique index if not exists USER_LOGIN_UINDEX on USERS (login);
 
 CREATE TABLE IF NOT EXISTS films
 (
