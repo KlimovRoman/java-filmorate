@@ -71,8 +71,8 @@ public class FilmDbStorage implements FilmStorage {
 
         delAllGenresFromFilm(filmId); //удаляем все существующие жанры по фильму из таблицы genre_films
         //в цикле прогоняем все жанры и записываем в таблицу genre_films/
-        for(Genre genre: genres) {
-            if(genre != null) {
+        for (Genre genre: genres) {
+            if (genre != null) {
                 int genreId = genre.getId();
                 addGenresFilm(filmId,genreId);
             }
