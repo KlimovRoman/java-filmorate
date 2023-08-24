@@ -27,7 +27,7 @@ public class UserDbStorage implements UserStorage {
 
     @Autowired
     public UserDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate=jdbcTemplate;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
@@ -53,7 +53,7 @@ public class UserDbStorage implements UserStorage {
         // полученный юзер пока не обогащен друзьями
         String sql = "select * from users where id = ?";
         SqlRowSet userRows = jdbcTemplate.queryForRowSet(sql, id);
-        if(userRows.next()) {
+        if (userRows.next()) {
             User user = new User();
             user.setId(userRows.getInt("id"));
             user.setName(userRows.getString("name"));
@@ -72,12 +72,12 @@ public class UserDbStorage implements UserStorage {
         String sqlQuery = "update users set " +
                 "name = ?, login = ?, email = ?, birthday = ? " +
                 "where id = ?";
-        jdbcTemplate.update(sqlQuery
-                , userToUpd.getName()
-                , userToUpd.getLogin()
-                , userToUpd.getEmail()
-                , Date.valueOf(userToUpd.getBirthday())
-                , userToUpd.getId());
+        jdbcTemplate.update(sqlQuery,
+                 userToUpd.getName(),
+                 userToUpd.getLogin(),
+                 userToUpd.getEmail(),
+                 Date.valueOf(userToUpd.getBirthday()),
+                 userToUpd.getId());
 
         return getUserById(userToUpd.getId()).orElseThrow(() -> new EntityNotFoundException("Юзер не найден в базе"));
     }
@@ -113,7 +113,7 @@ public class UserDbStorage implements UserStorage {
         getUserById(friendId).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
         String sqlQuery = "delete from friendship where user_id = " + userId + " and friend_id = " + friendId;
         int count =  jdbcTemplate.update(sqlQuery);
-        if(count == 0) {
+        if (count == 0) {
             throw new  EntityNotFoundException("Юзер не найден в базе(удаление не прошло)");
         }
     }
@@ -134,14 +134,14 @@ public class UserDbStorage implements UserStorage {
         List<User> friendsList2 = getUserFriends(otherId);
         Set<Integer> frSet1 = new HashSet<>();
         Set<Integer> frSet2 = new HashSet<>();
-        for(User usr: friendsList1) {
+        for (User usr: friendsList1) {
             frSet1.add(usr.getId());
         }
-        for(User usr: friendsList2) {
+        for (User usr: friendsList2) {
             frSet2.add(usr.getId());
         }
         Set<Integer> commonFriendsIds = frSet1.stream().filter(frSet2::contains).collect(Collectors.toSet()); //нашли пересечение
-        for(Integer idd: commonFriendsIds) {
+        for (Integer idd: commonFriendsIds) {
             listForReturn.add(getUserById(idd).get());
         }
         return listForReturn; //доcтали пользоваетелей и упокавали в список
