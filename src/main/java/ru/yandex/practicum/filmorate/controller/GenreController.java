@@ -17,7 +17,7 @@ import java.util.List;
 @RequestMapping("/genres")
 public class GenreController {
     //поле, куда будет передан сервис через контструктор с помощью зависимостей
-    // конструктор создан с помощью аннотацией RequiredArgsConstructor
+    // конструктор создан с помощью аннотацией RequiredArgsConstructor а
     private final GenreService genreService;
 
     @GetMapping
