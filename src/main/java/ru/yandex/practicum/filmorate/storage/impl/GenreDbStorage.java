@@ -41,7 +41,7 @@ public class GenreDbStorage implements GenreStorage {
         }
 
         SqlParameterSource parameters = new MapSqlParameterSource("ids", ids);
-        String sql = "select * from genre_films gf left join genre g on gf.genre_id = g.id where id IN (:ids)";
+        String sql = "select * from genre_films gf left join genre g on gf.genre_id = g.id where gf.FILM_ID IN (:ids)";
         List<Genre> genres = namedJdbcTemplate.query(
                 sql,
                 parameters,
