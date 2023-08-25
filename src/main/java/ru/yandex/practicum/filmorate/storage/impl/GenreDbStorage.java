@@ -16,10 +16,7 @@ import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -35,9 +32,11 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public void loadGenresForFilm(List<Film> films) {
-
         List<Integer> ids = new ArrayList<>();
+        Map<Integer,Film> filmsMap = new HashMap<>();
+
         for (Film film: films) {
+            filmsMap.put(film.getId(),film);
             ids.add(film.getId()); //создаем список айдишников
         }
 
@@ -46,7 +45,7 @@ public class GenreDbStorage implements GenreStorage {
         List<Genre> genres = namedJdbcTemplate.query(
                 sql,
                 parameters,
-                (rs, rowNum) -> makeGenreForFilm(rs,films));
+                (rs, rowNum) -> makeGenreForFilm(rs,filmsMap));
 
     }
 
@@ -101,13 +100,14 @@ public class GenreDbStorage implements GenreStorage {
     }
 
 
-    private Genre makeGenreForFilm(ResultSet rs, List<Film> films) throws SQLException {
+    private Genre makeGenreForFilm(ResultSet rs, Map<Integer,Film> filmsMap ) throws SQLException {
+       // Map<Integer,Film> filmsMap = new HashMap<>();
         int filmId = rs.getInt("film_id");
         int genreId = rs.getInt("genre_id");
         String name = rs.getString("name_genre");
         Genre genre = new Genre(genreId,name);
-        if (films.contains(filmId)) {
-            films.get(filmId).getGenres().add(genre);
+        if (filmsMap.containsKey(filmId)) {
+            filmsMap.get(filmId).getGenres().add(genre);
         }
         return genre;
     }
