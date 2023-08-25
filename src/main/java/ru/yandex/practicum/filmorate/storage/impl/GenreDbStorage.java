@@ -100,7 +100,7 @@ public class GenreDbStorage implements GenreStorage {
     }
 
 
-    private Genre makeGenreForFilm(ResultSet rs, Map<Integer,Film> filmsMap ) throws SQLException {
+    private Genre makeGenreForFilm(ResultSet rs, Map<Integer,Film> filmsMap) throws SQLException {
        // Map<Integer,Film> filmsMap = new HashMap<>();
         int filmId = rs.getInt("film_id");
         int genreId = rs.getInt("genre_id");
