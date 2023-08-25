@@ -60,16 +60,18 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User updUser(User userToUpd) {
-        getUserById(userToUpd.getId()).orElseThrow(() -> new EntityNotFoundException("Юзер, который необходимо обновить не найден в базе"));
         String sqlQuery = "update users set " +
                 "name = ?, login = ?, email = ?, birthday = ? " +
                 "where id = ?";
-        jdbcTemplate.update(sqlQuery,
+        int rowUpdCnt = jdbcTemplate.update(sqlQuery,
                  userToUpd.getName(),
                  userToUpd.getLogin(),
                  userToUpd.getEmail(),
                  Date.valueOf(userToUpd.getBirthday()),
                  userToUpd.getId());
+        if (rowUpdCnt < 1) {
+            throw new EntityNotFoundException("Юзер, который необходимо обновить не найден в базе");
+        }
         return userToUpd;
     }
 
@@ -102,25 +104,6 @@ public class UserDbStorage implements UserStorage {
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs),id);
     }
 
-
-    public List<User> getCommonFriendsDEL(int id, int otherId) {
-        List<User> listForReturn = new ArrayList<>();
-        List<User> friendsList1 = getUserFriends(id);
-        List<User> friendsList2 = getUserFriends(otherId);
-        Set<Integer> frSet1 = new HashSet<>();
-        Set<Integer> frSet2 = new HashSet<>();
-        for (User usr: friendsList1) {
-            frSet1.add(usr.getId());
-        }
-        for (User usr: friendsList2) {
-            frSet2.add(usr.getId());
-        }
-        Set<Integer> commonFriendsIds = frSet1.stream().filter(frSet2::contains).collect(Collectors.toSet()); //нашли пересечение
-        for (Integer idd: commonFriendsIds) {
-            listForReturn.add(getUserById(idd).get());
-        }
-        return listForReturn; //доcтали пользоваетелей и упокавали в список
-    }
 
     @Override
     public List<User> getCommonFriends(int id, int otherId) {

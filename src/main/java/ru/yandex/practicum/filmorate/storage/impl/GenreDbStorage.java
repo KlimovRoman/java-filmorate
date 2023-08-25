@@ -50,15 +50,6 @@ public class GenreDbStorage implements GenreStorage {
 
     }
 
-    @Override //кандидат на удаление
-    public void loadGenresForOneFilm(Film film) {
-        String sql = "select * from genre_films gf left join genre g on gf.genre_id = g.id where film_id = ?";
-        List<Genre> genresForOneFilm = jdbcTemplate.query(sql, (rs, rowNum) -> makeGenre(rs),film.getId());
-        for (Genre genre: genresForOneFilm) {
-            film.getGenres().add(genre);
-        }
-    }
-
 
     @Override
     public List<Genre> getGenres() {
@@ -95,6 +86,12 @@ public class GenreDbStorage implements GenreStorage {
                         return genreIds.size();
                     }
                 });
+    }
+
+    @Override
+    public void delAllGenresFromFilm(int filmId) {
+        String sqlQuery = "delete from genre_films where film_id = " + filmId;
+        int count =  jdbcTemplate.update(sqlQuery);
     }
 
     private Genre makeGenre(ResultSet rs) throws SQLException {

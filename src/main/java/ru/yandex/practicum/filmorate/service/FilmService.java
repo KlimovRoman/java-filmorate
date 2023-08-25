@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import java.time.LocalDate;
@@ -29,12 +30,21 @@ public class FilmService {
 
     public Film addFilm(Film filmToAdd) {
         releaseDateValid(filmToAdd);
-        return filmStorage.addFilm(filmToAdd);
+        Film filmAfterAdd = filmStorage.addFilm(filmToAdd);
+        LinkedHashSet<Genre> genres =  filmAfterAdd.getGenres();
+        //инсертим жанры одним батчом
+        genreStorage.gernesBatchInsert(genres, filmAfterAdd.getId());
+        return filmAfterAdd;
     }
 
     public Film updFilm(Film filmToUpd) {
         releaseDateValid(filmToUpd);
-         return filmStorage.updFilm(filmToUpd);
+        Film filmAfterUpd = filmStorage.updFilm(filmToUpd);
+        genreStorage.delAllGenresFromFilm(filmAfterUpd.getId());//удаляем жанры чтобы потом записать новые
+        LinkedHashSet<Genre> genres =  filmAfterUpd.getGenres();
+        //инсертим жанры одним батчом
+        genreStorage.gernesBatchInsert(genres, filmAfterUpd.getId());
+        return filmAfterUpd;
     }
 
     public List<Film> getFilms() {
@@ -59,7 +69,6 @@ public class FilmService {
     }
 
     public List<Film> getTopMostLikedFilms(int topCount) {
-        log.info("отработка Сервиса POPULAR count " + topCount);
         List<Film> listForGenresUpd = filmStorage.getTopMostLikedFilms(topCount);
         genreStorage.loadGenresForFilm(listForGenresUpd);
         return listForGenresUpd;

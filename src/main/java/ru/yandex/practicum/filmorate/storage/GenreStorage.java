@@ -10,11 +10,12 @@ import java.util.Optional;
 public interface GenreStorage {
     public void loadGenresForFilm(List<Film> films);
 
-    public void loadGenresForOneFilm(Film film);
 
     public Optional<Genre> getGenreById(int id);
 
     public List<Genre> getGenres();
 
     public int[] gernesBatchInsert(LinkedHashSet<Genre> genres, int filmId);
+
+    public void delAllGenresFromFilm(int filmId);
 }
