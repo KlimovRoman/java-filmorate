@@ -51,3 +51,17 @@ CREATE TABLE IF NOT EXISTS likes
     user_id int REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT pk_film_id_user_id PRIMARY KEY (film_id, user_id)
 );
+INSERT into rating (name_rating)
+values ('G'),
+       ('PG'),
+       ('PG-13'),
+       ('R'),
+       ('NC-17');
+
+INSERT into genre (name_genre)
+values     ('Комедия'),
+           ('Драма'),
+           ('Мультфильм'),
+           ('Триллер'),
+           ('Документальный'),
+           ('Боевик');
