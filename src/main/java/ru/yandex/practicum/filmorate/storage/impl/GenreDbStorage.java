@@ -101,13 +101,13 @@ public class GenreDbStorage implements GenreStorage {
 
 
     private Genre makeGenreForFilm(ResultSet rs, Map<Integer,Film> filmsMap) throws SQLException {
-       // Map<Integer,Film> filmsMap = new HashMap<>();
         int filmId = rs.getInt("film_id");
         int genreId = rs.getInt("genre_id");
         String name = rs.getString("name_genre");
         Genre genre = new Genre(genreId,name);
-        if (filmsMap.containsKey(filmId)) {
-            filmsMap.get(filmId).getGenres().add(genre);
+        Film film = filmsMap.get(filmId);
+        if (film != null) {
+            film.getGenres().add(genre);
         }
         return genre;
     }
