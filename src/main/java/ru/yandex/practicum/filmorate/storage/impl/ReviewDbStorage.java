@@ -114,31 +114,26 @@ public class ReviewDbStorage implements ReviewStorage {
 
     private void ensureUserExists(int id) {
         String sqlQuery = "SELECT * FROM USERS WHERE ID = ?";
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet(sqlQuery, id);
-
-        if (!userRows.next()) {
-            log.error("Пользователь с идентификатором {} не найден.", id);
-            throw new EntityNotFoundException("Пользователь не найден.");
-        }
+        ensureEntityExists(sqlQuery, "Пользователь", id);
     }
 
     private void ensureFilmExists(int id) {
         String sqlQuery = "SELECT * FROM FILMS WHERE ID = ?";
-        SqlRowSet filmRows = jdbcTemplate.queryForRowSet(sqlQuery, id);
-
-        if (!filmRows.next()) {
-            log.error("Фильм с идентификатором {} не найден.", id);
-            throw new EntityNotFoundException("Фильм не найден.");
-        }
+        ensureEntityExists(sqlQuery, "Фильм", id);
     }
 
     private void ensureReviewExists(int id) {
         String sqlQuery = "SELECT * FROM REVIEWS WHERE REVIEW_ID = ?";
+        ensureEntityExists(sqlQuery, "Отзыв", id);
+    }
+
+    private void ensureEntityExists(String sqlQuery, String name, int id) {
         SqlRowSet filmRows = jdbcTemplate.queryForRowSet(sqlQuery, id);
 
         if (!filmRows.next()) {
-            log.error("Фильм с идентификатором {} не найден.", id);
-            throw new EntityNotFoundException("Фильм не найден.");
+            String message = "Сущность \"" + name + "\" с идентификатором " + id + " не найдена.";
+            log.error(message);
+            throw new EntityNotFoundException(message);
         }
     }
 }
