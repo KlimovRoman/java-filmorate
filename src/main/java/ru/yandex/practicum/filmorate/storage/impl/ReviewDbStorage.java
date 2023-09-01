@@ -38,31 +38,23 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Optional<Review> update(Review review) {
-        String sqlQuery = "UPDATE REVIEWS SET CONTENT = ?, IS_POSITIVE = ?" +
-                " WHERE REVIEW_ID = ?";
+        ensureUserExists(review.getUserId());
+        ensureFilmExists(review.getFilmId());
 
-        int result = jdbcTemplate.update(sqlQuery,
-                review.getContent(),
-                review.getIsPositive(),
-                review.getReviewId());
-        if (result == 0)
+        String sqlQuery = "UPDATE REVIEWS SET CONTENT = ?, IS_POSITIVE = ? WHERE REVIEW_ID = ?";
+
+        int result = jdbcTemplate.update(sqlQuery, review.getContent(), review.getIsPositive(), review.getReviewId());
+        if (result == 0) {
             return Optional.empty();
-        return findById(review.getReviewId());
+        }
 
+        return findById(review.getReviewId());
     }
 
     @Override
     public void delete(int id) {
-        String sql =
-                "DELETE " +
-                        "FROM REVIEWS " +
-                        "WHERE REVIEW_ID = ?";
-
-        int result = jdbcTemplate.update(sql, id);
-        if (result == 1)
-            log.info("Удалён отзыв id {}", id);
-        else
-            throw new EntityNotFoundException("Отзыв для удаления не найден.");
+        String sqlQuery = "DELETE FROM REVIEWS WHERE REVIEW_ID = ?";
+        jdbcTemplate.update(sqlQuery, id);
     }
 
     @Override
@@ -76,7 +68,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
         if (reviewRows.next()) {
             return Optional.of(reviewRows(reviewRows));
-        } else log.info("Фильм с идентификатором {} не найден.", id);
+        } else log.info("Отзыв с идентификатором {} не найден.", id);
         return Optional.empty();
     }
 
@@ -118,9 +110,8 @@ public class ReviewDbStorage implements ReviewStorage {
 
 
     private void ensureUserExists(int id) {
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("SELECT * " +
-                "FROM USERS " +
-                "WHERE ID = ?", id);
+        String sqlQuery = "SELECT * FROM USERS WHERE ID = ?";
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet(sqlQuery, id);
 
         if (!userRows.next()) {
             log.error("Пользователь с идентификатором {} не найден.", id);
@@ -129,9 +120,8 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     private void ensureFilmExists(int id) {
-        SqlRowSet filmRows = jdbcTemplate.queryForRowSet("SELECT * " +
-                "FROM FILMS " +
-                "WHERE ID = ?", id);
+        String sqlQuery = "SELECT * FROM FILMS WHERE ID = ?";
+        SqlRowSet filmRows = jdbcTemplate.queryForRowSet(sqlQuery, id);
 
         if (!filmRows.next()) {
             log.error("Фильм с идентификатором {} не найден.", id);
