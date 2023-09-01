@@ -62,7 +62,7 @@ public class ReviewDbStorage implements ReviewStorage {
         ensureReviewExists(id);
 
         String sqlQuery = "SELECT r.*, " +
-                "(COUNT(LRT.USER_ID) - COUNT(LRF.USER_ID)) AS USE " +
+                "(COUNT(LRT.USER_ID) - COUNT(LRF.USER_ID)) AS USEFUL " +
                 "FROM REVIEWS AS r " +
                 "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = true) LRT on r.ID = LRT.REVIEW_ID " +
                 "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = false) LRF on r.ID = LRF.REVIEW_ID " +
@@ -79,7 +79,7 @@ public class ReviewDbStorage implements ReviewStorage {
             where = "WHERE FILM_ID = " + filmId.get();
         }
 
-        String sql = "SELECT r.*, (COUNT(LRT.USER_ID) - COUNT(LRF.USER_ID)) AS USE " +
+        String sql = "SELECT r.*, (COUNT(LRT.USER_ID) - COUNT(LRF.USER_ID)) AS USEFUL " +
                 "FROM REVIEWS AS r " +
                 "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = true) LRT on r.ID = LRT.REVIEW_ID " +
                 "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = false) LRF on r.ID = LRF.REVIEW_ID " +
@@ -98,7 +98,7 @@ public class ReviewDbStorage implements ReviewStorage {
                 .isPositive(resultSet.getBoolean("is_positive"))
                 .userId(resultSet.getInt("user_id"))
                 .filmId(resultSet.getInt("film_id"))
-                .useful(resultSet.getInt("use"))
+                .useful(resultSet.getInt("useful"))
                 .build();
     }
 
