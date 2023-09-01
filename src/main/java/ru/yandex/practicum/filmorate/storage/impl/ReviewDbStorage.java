@@ -59,17 +59,17 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Optional<Review> findById(int id) {
-        SqlRowSet reviewRows = jdbcTemplate.queryForRowSet("SELECT r.*, " +
+        ensureReviewExists(id);
+
+        String sqlQuery = "SELECT r.*, " +
                 "(COUNT(LRT.USER_ID) - COUNT(LRF.USER_ID)) AS USE " +
                 "FROM REVIEWS AS r " +
                 "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = true) LRT on r.REVIEW_ID = LRT.REVIEW_ID " +
                 "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = false) LRF on r.REVIEW_ID = LRF.REVIEW_ID " +
-                " WHERE r.REVIEW_ID = ? GROUP BY r.REVIEW_ID", id);
+                " WHERE r.REVIEW_ID = ? GROUP BY r.REVIEW_ID";
 
-        if (reviewRows.next()) {
-            return Optional.of(reviewRows(reviewRows));
-        } else log.info("Отзыв с идентификатором {} не найден.", id);
-        return Optional.empty();
+        Review review = jdbcTemplate.queryForObject(sqlQuery, this::mapRowToReview, id);
+        return Optional.ofNullable(review);
     }
 
     @Override
@@ -87,27 +87,30 @@ public class ReviewDbStorage implements ReviewStorage {
                 " ORDER BY COUNT(LRT.USER_ID) - COUNT(LRF.USER_ID) DESC" +
                 " LIMIT " + count;
 
-        return jdbcTemplate.query(sql, (rs, rowNum) -> makeReview(rs));
+        return jdbcTemplate.query(sql, this::mapRowToReview);
     }
 
-    private Review makeReview(ResultSet rs) throws SQLException {
-        return new Review(rs.getInt("REVIEW_ID"),
-                rs.getString("CONTENT"),
-                rs.getBoolean("IS_POSITIVE"),
-                rs.getInt("USER_ID"),
-                rs.getInt("FILM_ID"),
-                rs.getInt("USE"));
+    private Review mapRowToReview(ResultSet resultSet, int rowNum) throws SQLException {
+        return Review.builder()
+                .reviewId(resultSet.getInt("review_id"))
+                .content(resultSet.getString("content"))
+                .isPositive(resultSet.getBoolean("is_positive"))
+                .userId(resultSet.getInt("user_id"))
+                .filmId(resultSet.getInt("film_id"))
+                .useful(resultSet.getInt("use"))
+                .build();
     }
 
-    private Review reviewRows(SqlRowSet rs) {
-        return new Review(rs.getInt("REVIEW_ID"),
-                rs.getString("CONTENT"),
-                rs.getBoolean("IS_POSITIVE"),
-                rs.getInt("USER_ID"),
-                rs.getInt("FILM_ID"),
-                rs.getInt("USE"));
-    }
+    private Map<String, Object> toMap(final Review review) {
+        Map<String, Object> values = new HashMap<>();
 
+        values.put("content", review.getContent());
+        values.put("is_positive", review.getIsPositive());
+        values.put("user_id", review.getUserId());
+        values.put("film_id", review.getFilmId());
+
+        return values;
+    }
 
     private void ensureUserExists(int id) {
         String sqlQuery = "SELECT * FROM USERS WHERE ID = ?";
@@ -129,15 +132,13 @@ public class ReviewDbStorage implements ReviewStorage {
         }
     }
 
-    private Map<String, Object> toMap(final Review review) {
-        Map<String, Object> values = new HashMap<>();
+    private void ensureReviewExists(int id) {
+        String sqlQuery = "SELECT * FROM REVIEWS WHERE REVIEW_ID = ?";
+        SqlRowSet filmRows = jdbcTemplate.queryForRowSet(sqlQuery, id);
 
-        values.put("content", review.getContent());
-        values.put("is_positive", review.getIsPositive());
-        values.put("user_id", review.getUserId());
-        values.put("film_id", review.getFilmId());
-
-        return values;
+        if (!filmRows.next()) {
+            log.error("Фильм с идентификатором {} не найден.", id);
+            throw new EntityNotFoundException("Фильм не найден.");
+        }
     }
-
 }
