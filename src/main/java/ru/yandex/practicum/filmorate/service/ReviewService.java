@@ -8,10 +8,12 @@ import ru.yandex.practicum.filmorate.storage.LikeReviewStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
+
     private final ReviewStorage reviewStorage;
     private final LikeReviewStorage likeReviewStorage;
 
@@ -24,17 +26,15 @@ public class ReviewService {
         return reviewStorage.update(review).orElseThrow(() -> new EntityNotFoundException("Отзыв не найден."));
     }
 
-
     public void delete(Integer id) {
         reviewStorage.delete(id);
     }
-
 
     public Review findById(Integer id) {
         return reviewStorage.findById(id).orElseThrow(() -> new EntityNotFoundException("Отзыв не найден."));
     }
 
-    public List<Review> findAll(Integer filmId, Integer count) {
+    public List<Review> findAll(Optional<Integer> filmId, Integer count) {
         return reviewStorage.findAll(filmId, count);
     }
 
@@ -53,6 +53,4 @@ public class ReviewService {
     public void deleteDislike(Integer id, Integer userId) {
         likeReviewStorage.deleteDislike(id, userId);
     }
-
-
 }

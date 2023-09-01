@@ -15,5 +15,5 @@ public interface ReviewStorage {
 
     Optional<Review> findById(int id);
 
-    List<Review> findAll(int filmId, int count);
+    List<Review> findAll(Optional<Integer> filmId, int count);
 }

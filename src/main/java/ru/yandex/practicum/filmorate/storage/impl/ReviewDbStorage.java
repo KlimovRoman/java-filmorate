@@ -73,10 +73,11 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public List<Review> findAll(int filmId, int count) {
+    public List<Review> findAll(Optional<Integer> filmId, int count) {
         String where = "";
-        if (filmId != 0)
-            where = "WHERE FILM_ID = " + filmId;
+        if (filmId.isPresent()) {
+            where = "WHERE FILM_ID = " + filmId.get();
+        }
 
         String sql = "SELECT r.*, (COUNT(LRT.USER_ID) - COUNT(LRF.USER_ID)) AS USE " +
                 "FROM REVIEWS AS r " +

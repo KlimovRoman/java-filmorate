@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.service.ReviewService;
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/reviews")
@@ -37,7 +38,8 @@ public class ReviewController {
     }
 
     @GetMapping()
-    public List<Review> findAll(@RequestParam(defaultValue = "0", required = false) @Positive Integer filmId, @RequestParam(defaultValue = "10", required = false) @Positive Integer count) {
+    public List<Review> findAll(@RequestParam @Positive Optional<Integer> filmId,
+                                @RequestParam(defaultValue = "10", required = false) @Positive Integer count) {
         return service.findAll(filmId, count);
     }
 
