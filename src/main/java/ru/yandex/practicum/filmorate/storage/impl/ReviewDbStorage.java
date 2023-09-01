@@ -31,7 +31,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("reviews")
-                .usingGeneratedKeyColumns("review_id");
+                .usingGeneratedKeyColumns("id");
         review.setReviewId(simpleJdbcInsert.executeAndReturnKey(toMap(review)).intValue());
         return review;
     }
@@ -41,7 +41,7 @@ public class ReviewDbStorage implements ReviewStorage {
         ensureUserExists(review.getUserId());
         ensureFilmExists(review.getFilmId());
 
-        String sqlQuery = "UPDATE REVIEWS SET CONTENT = ?, IS_POSITIVE = ? WHERE REVIEW_ID = ?";
+        String sqlQuery = "UPDATE REVIEWS SET CONTENT = ?, IS_POSITIVE = ? WHERE ID = ?";
 
         int result = jdbcTemplate.update(sqlQuery, review.getContent(), review.getIsPositive(), review.getReviewId());
         if (result == 0) {
@@ -53,7 +53,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public void delete(int id) {
-        String sqlQuery = "DELETE FROM REVIEWS WHERE REVIEW_ID = ?";
+        String sqlQuery = "DELETE FROM REVIEWS WHERE ID = ?";
         jdbcTemplate.update(sqlQuery, id);
     }
 
@@ -64,9 +64,9 @@ public class ReviewDbStorage implements ReviewStorage {
         String sqlQuery = "SELECT r.*, " +
                 "(COUNT(LRT.USER_ID) - COUNT(LRF.USER_ID)) AS USE " +
                 "FROM REVIEWS AS r " +
-                "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = true) LRT on r.REVIEW_ID = LRT.REVIEW_ID " +
-                "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = false) LRF on r.REVIEW_ID = LRF.REVIEW_ID " +
-                " WHERE r.REVIEW_ID = ? GROUP BY r.REVIEW_ID";
+                "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = true) LRT on r.ID = LRT.REVIEW_ID " +
+                "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = false) LRF on r.ID = LRF.REVIEW_ID " +
+                " WHERE r.ID = ? GROUP BY r.ID";
 
         Review review = jdbcTemplate.queryForObject(sqlQuery, this::mapRowToReview, id);
         return Optional.ofNullable(review);
@@ -80,10 +80,10 @@ public class ReviewDbStorage implements ReviewStorage {
 
         String sql = "SELECT r.*, (COUNT(LRT.USER_ID) - COUNT(LRF.USER_ID)) AS USE " +
                 "FROM REVIEWS AS r " +
-                "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = true) LRT on r.REVIEW_ID = LRT.REVIEW_ID " +
-                "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = false) LRF on r.REVIEW_ID = LRF.REVIEW_ID " +
+                "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = true) LRT on r.ID = LRT.REVIEW_ID " +
+                "LEFT JOIN (SELECT * FROM LIKE_REVIEW WHERE IS_POSITIVE = false) LRF on r.ID = LRF.REVIEW_ID " +
                 where +
-                " GROUP BY r.REVIEW_ID " +
+                " GROUP BY r.ID " +
                 " ORDER BY COUNT(LRT.USER_ID) - COUNT(LRF.USER_ID) DESC" +
                 " LIMIT " + count;
 
@@ -92,7 +92,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
     private Review mapRowToReview(ResultSet resultSet, int rowNum) throws SQLException {
         return Review.builder()
-                .reviewId(resultSet.getInt("review_id"))
+                .reviewId(resultSet.getInt("id"))
                 .content(resultSet.getString("content"))
                 .isPositive(resultSet.getBoolean("is_positive"))
                 .userId(resultSet.getInt("user_id"))
@@ -123,7 +123,7 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     private void ensureReviewExists(int id) {
-        String sqlQuery = "SELECT * FROM REVIEWS WHERE REVIEW_ID = ?";
+        String sqlQuery = "SELECT * FROM REVIEWS WHERE ID = ?";
         ensureEntityExists(sqlQuery, "Отзыв", id);
     }
 
