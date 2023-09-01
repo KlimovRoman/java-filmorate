@@ -3,20 +3,18 @@ package ru.yandex.practicum.filmorate.storage.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -28,23 +26,14 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review create(Review review) {
-        if (film(review.getFilmId()) && user(review.getUserId())) {
-            String sqlQuery = "INSERT INTO REVIEWS (CONTENT, IS_POSITIVE, USER_ID, FILM_ID)" +
-                    "values (?, ?, ?, ?)";
+        ensureUserExists(review.getUserId());
+        ensureFilmExists(review.getFilmId());
 
-            KeyHolder keyHolder = new GeneratedKeyHolder();
-            jdbcTemplate.update(connection -> {
-                PreparedStatement stmt = connection.prepareStatement(sqlQuery, new String[]{"REVIEW_ID"});
-                stmt.setString(1, review.getContent());
-                stmt.setBoolean(2, review.getIsPositive());
-                stmt.setInt(3, review.getUserId());
-                stmt.setInt(4, review.getFilmId());
-                return stmt;
-            }, keyHolder);
-            review.setReviewId(Objects.requireNonNull(keyHolder.getKey()).intValue());
-            return review;
-        } else
-            throw new ValidationException("Отзыв не добавлен.");
+        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
+                .withTableName("reviews")
+                .usingGeneratedKeyColumns("review_id");
+        review.setReviewId(simpleJdbcInsert.executeAndReturnKey(toMap(review)).intValue());
+        return review;
     }
 
     @Override
@@ -128,27 +117,37 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
 
-    private boolean film(Integer id) {
-        SqlRowSet filmRows = jdbcTemplate.queryForRowSet("SELECT * " +
-                "FROM FILMS " +
-                "WHERE ID = ?", id);
-        if (filmRows.next()) {
-            return true;
-        } else log.info("Фильм с идентификатором {} не найден.", id);
-        if (id == 0) {
-            throw new ValidationException("Фильм не найден.");
-        } else
-            throw new EntityNotFoundException("Фильм не найден.");
-    }
-
-    private boolean user(int id) {
+    private void ensureUserExists(int id) {
         SqlRowSet userRows = jdbcTemplate.queryForRowSet("SELECT * " +
                 "FROM USERS " +
                 "WHERE ID = ?", id);
-        if (userRows.next()) {
-            return true;
-        } else log.info("Пользователь с идентификатором {} не найден.", id);
-        throw new EntityNotFoundException("Пользователь не найден.");
+
+        if (!userRows.next()) {
+            log.error("Пользователь с идентификатором {} не найден.", id);
+            throw new EntityNotFoundException("Пользователь не найден.");
+        }
+    }
+
+    private void ensureFilmExists(int id) {
+        SqlRowSet filmRows = jdbcTemplate.queryForRowSet("SELECT * " +
+                "FROM FILMS " +
+                "WHERE ID = ?", id);
+
+        if (!filmRows.next()) {
+            log.error("Фильм с идентификатором {} не найден.", id);
+            throw new EntityNotFoundException("Фильм не найден.");
+        }
+    }
+
+    private Map<String, Object> toMap(final Review review) {
+        Map<String, Object> values = new HashMap<>();
+
+        values.put("content", review.getContent());
+        values.put("is_positive", review.getIsPositive());
+        values.put("user_id", review.getUserId());
+        values.put("film_id", review.getFilmId());
+
+        return values;
     }
 
 }

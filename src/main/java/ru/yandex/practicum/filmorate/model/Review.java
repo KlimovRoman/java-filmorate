@@ -19,6 +19,6 @@ public class Review {
     @NotNull
     private Integer userId;
     @NotNull
-    private int filmId;
+    private Integer filmId;
     private int useful;
 }
