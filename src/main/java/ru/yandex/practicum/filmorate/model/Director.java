@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
-import lombok.Getter;
 
 import javax.validation.constraints.NotBlank;
 import java.util.HashMap;
@@ -13,10 +12,6 @@ public class Director {
     private int id;
     @NotBlank
     private String name;
-
-    public Director() {
-
-    }
 
     public Director(int id, String name) {
         this.id = id;
