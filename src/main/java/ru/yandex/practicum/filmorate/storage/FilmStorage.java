@@ -19,4 +19,8 @@ public interface FilmStorage {
     public void delLike(int filmId, int userLikeId);
 
     public List<Film> getTopMostLikedFilms(int topCount);
+
+    public List<Film> getFilmsByDirectors(int directorId, String sortBy);
+
+    public List<Film> getFilmsBySearch(String fullSort);
 }
