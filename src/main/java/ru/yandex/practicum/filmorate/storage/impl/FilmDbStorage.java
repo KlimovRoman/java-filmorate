@@ -142,7 +142,7 @@ public class FilmDbStorage implements FilmStorage {
 //                " as f left join rating r on f.rating_id = r.mpa_id "
 //                +"left join likes as l on f.id = l.film_id join director_films as df " +
 //                " on df.film_id = f.id where df.director_id = ? group by f.id "
-//                +" order by " + sortBy;
+//                +" order by " + sortBy;//
         String sql = "select f.id , f.rating_id , f.name , f.description , f.release_date," +
                 " f.duration, r.name_rating, r.mpa_id, count(l.user_id) as total_likes from films" +
                 " as f left join rating r on f.rating_id = r.mpa_id " +
