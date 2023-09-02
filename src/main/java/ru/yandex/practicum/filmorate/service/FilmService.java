@@ -99,7 +99,7 @@ public class FilmService {
         }
     }
 
-    public List<Film> getFilmsByDirectors(int directorId, String sortBy) {//to do
+    public List<Film> getFilmsByDirectors(int directorId, String sortBy) {
         List<Film> filmsList;
         if (!directorStorage.contains(directorId)) {
             throw new EntityNotFoundException("отсутствует директора с id - " + directorId);
