@@ -16,16 +16,23 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.stream.Collectors;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
 
 @Slf4j
 @Primary
 @Component
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
-
+    private static final String SELECT_RECOMMENDED_FILMS = "SELECT f.*, r.*, " +
+            "FROM films f INNER JOIN rating r ON f.rating_id = r.mpa_id " +
+            "WHERE f.id IN (";
+    private static final String SELECT_ALL_LIKED_FILMS_ID = "SELECT * FROM likes";
 
     @Autowired
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
@@ -109,6 +116,29 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),topCount);
     }
 
+    @Override
+    public Optional<Map<Integer, List<Integer>>> getAllLikedFilms() {
+        Map<Integer, List<Integer>> allLikedFilms = new HashMap<>();
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(SELECT_ALL_LIKED_FILMS_ID);
+        while (rowSet.next()) {
+            Integer userId = Integer.parseInt(Objects.requireNonNull(rowSet.getString("user_id")));
+            Integer filmId = Integer.parseInt(Objects.requireNonNull(rowSet.getString("film_id")));
+            if (allLikedFilms.containsKey(userId)) {
+                allLikedFilms.get(userId).add(filmId);
+            } else {
+                List<Integer> likedFilmsByUser = new ArrayList<>();
+                likedFilmsByUser.add(filmId);
+                allLikedFilms.put(userId, likedFilmsByUser);
+            }
+        }
+        return Optional.of(allLikedFilms);
+    }
+
+    @Override
+    public Optional<List<Film>> getRecommendedFilms(String rangeId) {
+        return Optional.of(jdbcTemplate.queryForStream(SELECT_RECOMMENDED_FILMS + rangeId,
+                (rs, rowNum) -> makeFilm(rs)).collect(Collectors.toList()));
+    }
 
     private Film makeFilm(ResultSet rs) throws SQLException {
         Film film = new Film();
