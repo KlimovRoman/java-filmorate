@@ -59,7 +59,6 @@ public class FilmDbStorage implements FilmStorage {
         return filmToAdd;
     }
 
-
     @Override
     public Film updFilm(Film filmToUpd) {
         int filmId = filmToUpd.getId();
@@ -77,14 +76,12 @@ public class FilmDbStorage implements FilmStorage {
         return filmToUpd;
     }
 
-
     @Override
     public List<Film> getFilms() {
         // полученные фильмы не обогащены жанрами, будут обогащены в сервисе
         String sql = "select * from films f join rating r on f.rating_id = r.mpa_id";
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs));
     }
-
 
     @Override
     public Optional<Film> getFilmById(int id) {
@@ -93,7 +90,6 @@ public class FilmDbStorage implements FilmStorage {
         SqlRowSet filmRows = jdbcTemplate.queryForRowSet(sql, id);
         return filmMapper(filmRows);
     }
-
 
     @Override
     public void addLike(int filmId, int userLikeId) {
