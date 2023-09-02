@@ -224,8 +224,8 @@ public class FilmDbStorage implements FilmStorage {
 //                "on df.director_id = d.id left join likes as l on f.id = l.film_id where " + fullSort + " group by f.id";
         String sql2 = "select f.id , f.rating_id , f.name , f.description , f.release_date," +
                 " f.duration, r.name_rating, r.mpa_id, count(l.user_id) as total_likes from films" +
-                " as f left join rating r on f.rating_id = r.mpa_id "
-                +"left join likes as l on f.id = l.film_id " +
+                " as f left join rating r on f.rating_id = r.mpa_id " +
+                "left join likes as l on f.id = l.film_id " +
                 "where " + fullSort + " group by f.id order by total_likes desc;";
         return jdbcTemplate.query(sql2, (rs, rowNum) -> makeFilm(rs));
         //"(select df.film_id from director_films as df join director as d on df.director_id = d.id where d.director_name like '%query%)'"
