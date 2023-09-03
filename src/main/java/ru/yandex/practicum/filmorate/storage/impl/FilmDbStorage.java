@@ -153,16 +153,35 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getCommonFilms(int userId, int friendId) {
         //реализация фичи в рамках ГП (12 спринт)
-        String sql = "SELECT *\n" +
-                "FROM FILMS f \n" +
-                "LEFT JOIN rating r on f.rating_id = r.mpa_id \n" +
-                "WHERE f.ID IN (\n" +
-                "\tSELECT l.FILM_ID \n" +
-                "\tFROM LIKES l WHERE L.USER_ID = " + userId + "\n" +
-                "\tINTERSECT\n" +
-                "\tSELECT l.FILM_ID \n" +
-                "\tFROM LIKES l WHERE L.USER_ID = " + friendId + "\n" +
-                ") ";
+        String sql = "\n" +
+                "\tSELECT f.ID,\n" +
+                "\t\tf.RATING_ID,\n" +
+                "\t\tf.NAME ,\n" +
+                "\t\tf.DESCRIPTION,\n" +
+                "\t\tf.RELEASE_DATE,\n" +
+                "\t\tf.DURATION, \n" +
+                "\t\tr.NAME_RATING, \n" +
+                "\t\tr.MPA_ID, \n" +
+                "\t\tcount(li.USER_ID)\n" +
+                "\tFROM FILMS f \n" +
+                "\tLEFT JOIN rating r on f.rating_id = r.mpa_id \n" +
+                "\tLEFT JOIN likes li ON li.FILM_ID =f.ID\n" +
+                "\tWHERE f.ID IN (\n" +
+                "\t\tSELECT l.FILM_ID \n" +
+                "\t\tFROM LIKES l WHERE L.USER_ID = 1 \n" +
+                "\t\tINTERSECT\n" +
+                "\t\tSELECT l.FILM_ID \n" +
+                "\t\tFROM LIKES l WHERE L.USER_ID = 2 \n" +
+                "\t) \n" +
+                "\tGROUP BY  f.ID,\n" +
+                "\t\tf.RATING_ID,\n" +
+                "\t\tf.NAME ,\n" +
+                "\t\tf.DESCRIPTION,\n" +
+                "\t\tf.RELEASE_DATE,\n" +
+                "\t\tf.DURATION,\n" +
+                "\t\tr.NAME_RATING, \n" +
+                "\t\tr.MPA_ID\n" +
+                "\torder by count(user_id) desc";
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs));
     }
 
