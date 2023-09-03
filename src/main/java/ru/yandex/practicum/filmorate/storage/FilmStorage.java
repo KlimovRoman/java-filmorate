@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FilmStorage {
+    public List<Film> getFilmsByDirectors(int directorId, String sortBy);
+
+    public List<Film> getFilmsBySearch(String query, String[] by);
+
     public Film addFilm(Film filmToAdd);
 
     public Film updFilm(Film filmToUpd);

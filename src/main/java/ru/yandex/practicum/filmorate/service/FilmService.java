@@ -5,8 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import java.time.LocalDate;
@@ -18,14 +20,16 @@ import java.util.*;
 public class FilmService {
     private final FilmStorage filmStorage; //поле куда будет передано хранилище через контструктор с помощью зависимостей
     private final GenreStorage genreStorage;
+    private final DirectorStorage directorStorage;
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final LocalDate dateForCompare =  LocalDate.parse("1895-12-28",formatter);
 
     //связали зависимостью  сервис и хранилище
     @Autowired
-    public FilmService(FilmStorage filmStorage, GenreStorage genreStorage) {
+    public FilmService(FilmStorage filmStorage, GenreStorage genreStorage, DirectorStorage directorStorage) {
         this.filmStorage = filmStorage;
         this.genreStorage = genreStorage;
+        this.directorStorage = directorStorage;
     }
 
     public Film addFilm(Film filmToAdd) {
@@ -34,6 +38,10 @@ public class FilmService {
         LinkedHashSet<Genre> genres =  filmAfterAdd.getGenres();
         //инсертим жанры одним батчом
         genreStorage.gernesBatchInsert(genres, filmAfterAdd.getId());
+
+        Set<Director> directors = filmAfterAdd.getDirectors();
+        directorStorage.directorBatchInsert(directors, filmAfterAdd.getId());
+
         return filmAfterAdd;
     }
 
@@ -44,12 +52,18 @@ public class FilmService {
         LinkedHashSet<Genre> genres =  filmAfterUpd.getGenres();
         //инсертим жанры одним батчом
         genreStorage.gernesBatchInsert(genres, filmAfterUpd.getId());
+
+        directorStorage.delAllDirectorsFromFilm(filmAfterUpd.getId());
+        Set<Director> directors = filmAfterUpd.getDirectors();
+        directorStorage.directorBatchInsert(directors, filmAfterUpd.getId());
+
         return filmAfterUpd;
     }
 
     public List<Film> getFilms() {
         List<Film> tempFilms =  filmStorage.getFilms();
         genreStorage.loadGenresForFilm(tempFilms); //обогатили фильмы жанрами
+        directorStorage.loadDirectorsForFilm(tempFilms);//обогатили фильмы директорами
         return tempFilms;
     }
 
@@ -76,12 +90,14 @@ public class FilmService {
     public Film getFilmById(int id) {
        Film film =  filmStorage.getFilmById(id).orElseThrow(() -> new EntityNotFoundException("Фильм не найден в базе"));
        genreStorage.loadGenresForFilm(List.of(film));
+       directorStorage.loadDirectorsForFilm(List.of(film));
        return film;
     }
 
     public List<Film> getTopMostLikedFilms(int topCount) {
         List<Film> listForGenresUpd = filmStorage.getTopMostLikedFilms(topCount);
         genreStorage.loadGenresForFilm(listForGenresUpd);
+        directorStorage.loadDirectorsForFilm(listForGenresUpd);
         return listForGenresUpd;
     }
 
@@ -92,5 +108,32 @@ public class FilmService {
             log.info("Валидация не пройдена, дата релиза должна быть после 1895-12-28");
             throw new ValidationException("Не пройдена валидация");
         }
+    }
+
+    public List<Film> getFilmsByDirectors(int directorId, String sortBy) {
+        List<Film> filmsList;
+        if (!directorStorage.contains(directorId)) {
+            throw new EntityNotFoundException("отсутствует директора с id - " + directorId);
+        }
+        if (sortBy.equals("year")) {
+            filmsList = filmStorage.getFilmsByDirectors(directorId, "release_date");
+        } else if (sortBy.equals("likes")) {
+            filmsList = filmStorage.getFilmsByDirectors(directorId, "total_likes");
+        } else {
+            throw new ValidationException("запрос на сортировку не верен, sortBy - " + sortBy);
+        }
+        if (filmsList.isEmpty()) {
+            throw new EntityNotFoundException("нет фильмов директора с id - " + directorId);
+        }
+        genreStorage.loadGenresForFilm(filmsList);
+        directorStorage.loadDirectorsForFilm(filmsList);
+        return filmsList;
+    }
+
+    public List<Film> getFilmsBySearch(String query, String[] by) {
+        List<Film> filmsFound = filmStorage.getFilmsBySearch(query, by);
+        genreStorage.loadGenresForFilm(filmsFound);
+        directorStorage.loadDirectorsForFilm(filmsFound);
+        return filmsFound;
     }
 }
