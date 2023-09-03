@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface FilmStorage {
+    public List<Film> getFilmsBySearch(String query, String[] by);
+
     public Film addFilm(Film filmToAdd);
 
     public Film updFilm(Film filmToUpd);
