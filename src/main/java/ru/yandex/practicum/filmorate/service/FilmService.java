@@ -120,23 +120,7 @@ public class FilmService {
     }
 
     public List<Film> getFilmsBySearch(String query, String[] by) {
-        String fullSort = "";
-        for (String sortPart : by) {
-            if (!fullSort.isBlank()) {
-                fullSort = fullSort + " or ";
-            }
-            if (sortPart.equals("director")) {
-                //fullSort = fullSort + "d.name_director like '%" + query + "%'";
-                fullSort = fullSort + " f.id in (select df.film_id from director_films as df join director as d" +
-                        " on df.director_id = d.id where lower(d.name_director) like '%" + query.toLowerCase() + "%') ";
-            } else if (sortPart.equals("title")) {
-                fullSort = fullSort + " lower(f.name) like '%" + query.toLowerCase() + "%' ";
-            } else {
-                throw new ValidationException("часть запроса by ошибочна - " + sortPart);
-            }
-        }
-        System.out.println(fullSort);
-        List<Film> filmsFound = filmStorage.getFilmsBySearch(fullSort);
+        List<Film> filmsFound = filmStorage.getFilmsBySearch(query, by);
         genreStorage.loadGenresForFilm(filmsFound);
         directorStorage.loadDirectorsForFilm(filmsFound);
         return filmsFound;
