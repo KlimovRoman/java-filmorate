@@ -6,21 +6,21 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface FilmStorage {
-    Film addFilm(Film filmToAdd);
+    public Film addFilm(Film filmToAdd);
 
-    Film updFilm(Film filmToUpd);
+    public Film updFilm(Film filmToUpd);
 
-    List<Film> getFilms();
+    public List<Film> getFilms();
 
-    Optional<Film> getFilmById(int id);
+    public Optional<Film> getFilmById(int id);
 
-    void addLike(int filmId, int userLikeId);
-
-    void delLike(int filmId, int userLikeId);
+    public void addLike(int filmId, int userLikeId);
 
     List<Film> getTopMostLikedFilms(int topCount);
 
     Map<Integer, List<Integer>> getAllLikedFilms();
 
     List<Film> getRecommendedFilms(List<Integer> recommendedFilmsId);
+
+    public List<Film> getCommonFilms(int userId, int friendId);
 }

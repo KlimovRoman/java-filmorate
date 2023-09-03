@@ -53,6 +53,12 @@ public class FilmService {
         return tempFilms;
     }
 
+    public List<Film> getCommonFilms(int userId, int friendId) {
+        //реализация фичи в рамках ГП (12 спринт)
+        List<Film> tempFilms =  filmStorage.getCommonFilms(userId, friendId);
+        genreStorage.loadGenresForFilm(tempFilms); //обогатили фильмы жанрами
+        return tempFilms;
+    }
 
     public void addLike(int filmId, int userLikeId) {
         filmStorage.addLike(filmId, userLikeId);

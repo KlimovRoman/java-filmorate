@@ -149,6 +149,20 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.queryForStream(SELECT_RECOMMENDED_FILMS + rangeId,
                 (rs, rowNum) -> makeFilm(rs)).collect(Collectors.toList());
     }
+    @Override
+    public List<Film> getCommonFilms(int userId, int friendId) {
+        //реализация фичи в рамках ГП (12 спринт)
+        String sql = "SELECT *\n" +
+                "FROM FILMS f \n" +
+                "WHERE f.ID IN (\n" +
+                "\tSELECT l.FILM_ID \n" +
+                "\tFROM LIKES l WHERE L.USER_ID = ? \n" +
+                "\tINTERSECT\n" +
+                "\tSELECT l.FILM_ID \n" +
+                "\tFROM LIKES l WHERE L.USER_ID = ? \n" +
+                ")";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),userId,friendId);
+    }
 
     private Film makeFilm(ResultSet rs) throws SQLException {
         Film film = new Film();
