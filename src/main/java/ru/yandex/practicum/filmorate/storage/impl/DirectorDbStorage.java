@@ -40,28 +40,11 @@ public class DirectorDbStorage implements DirectorStorage {
 
     }
 
-    private Director makeDirector(ResultSet rs) throws SQLException {
-        int id = rs.getInt("id");
-        String name = rs.getString("name_director");
-        return new Director(id,name);
-    }
-
     @Override
     public Optional<Director> getDirectorById(int id) {
         String sql = "select * from director where id =?";
         SqlRowSet directorRows = jdbcTemplate.queryForRowSet(sql, id);
         return directorMapper(directorRows);
-    }
-
-    private Optional<Director> directorMapper(SqlRowSet directorRows) {
-        if (directorRows.next()) {
-            int id = directorRows.getInt("id");
-            String name = directorRows.getString("name_director");
-            Director director = new Director(id,name);
-            return Optional.of(director);
-        } else {
-            return Optional.empty();
-        }
     }
 
     @Override
@@ -121,6 +104,7 @@ public class DirectorDbStorage implements DirectorStorage {
                 });
     }
 
+    @Override
     public void loadDirectorsForFilm(List<Film> films) {
         List<Integer> ids = new ArrayList<>();
         Map<Integer,Film> filmsMap = new HashMap<>();
@@ -138,6 +122,18 @@ public class DirectorDbStorage implements DirectorStorage {
                 (rs, rowNum) -> makeDirectorForFilm(rs,filmsMap));
     }
 
+    @Override
+    public void delAllDirectorsFromFilm(int filmId) {
+        String sqlQuery = "delete from director_films where film_id = ?";
+        int count =  jdbcTemplate.update(sqlQuery, filmId);
+    }
+
+    private Director makeDirector(ResultSet rs) throws SQLException {
+        int id = rs.getInt("id");
+        String name = rs.getString("name_director");
+        return new Director(id,name);
+    }
+
     private Director makeDirectorForFilm(ResultSet rs, Map<Integer,Film> filmsMap) throws SQLException {
         int filmId = rs.getInt("film_id");
         int directorId = rs.getInt("director_id");
@@ -150,8 +146,14 @@ public class DirectorDbStorage implements DirectorStorage {
         return director;
     }
 
-    public void delAllDirectorsFromFilm(int filmId) {
-        String sqlQuery = "delete from director_films where film_id = ?";
-        int count =  jdbcTemplate.update(sqlQuery, filmId);
+    private Optional<Director> directorMapper(SqlRowSet directorRows) {
+        if (directorRows.next()) {
+            int id = directorRows.getInt("id");
+            String name = directorRows.getString("name_director");
+            Director director = new Director(id,name);
+            return Optional.of(director);
+        } else {
+            return Optional.empty();
+        }
     }
 }

@@ -194,6 +194,41 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
+    @Override
+    public List<Film> getFilmsByDirectors(int directorId, String sortBy) {
+        String sql = "select f.id , f.rating_id , f.name , f.description , f.release_date," +
+                " f.duration, r.name_rating, r.mpa_id, count(l.user_id) as total_likes from films" +
+                " as f left join rating r on f.rating_id = r.mpa_id " +
+                "left join likes as l on f.id = l.film_id where " +
+                " f.id in (select film_id from director_films join director where director_id = ?) " +
+                " group by f.id order by " + sortBy;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),directorId);
+    }
+
+    @Override
+    public List<Film> getFilmsBySearch(String query, String[] by) {
+        String fullSort = "";
+        for (String sortPart : by) {
+            if (!fullSort.isBlank()) {
+                fullSort = fullSort + " or ";
+            }
+            if (sortPart.equals("director")) {
+                fullSort = fullSort + " f.id in (select df.film_id from director_films as df join director as d" +
+                        " on df.director_id = d.id where lower(d.name_director) like '%" + query.toLowerCase() + "%') ";
+            } else if (sortPart.equals("title")) {
+                fullSort = fullSort + " lower(f.name) like '%" + query.toLowerCase() + "%' ";
+            } else {
+                throw new ValidationException("часть запроса by ошибочна - " + sortPart);
+            }
+        }
+        String sql = "select f.id , f.rating_id , f.name , f.description , f.release_date," +
+                " f.duration, r.name_rating, r.mpa_id, count(l.user_id) as total_likes from films" +
+                " as f left join rating r on f.rating_id = r.mpa_id " +
+                "left join likes as l on f.id = l.film_id " +
+                "where " + fullSort + " group by f.id order by total_likes desc";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs));
+    }
+
     private Film makeFilm(ResultSet rs) throws SQLException {
         Film film = new Film();
         film.setId(rs.getInt("id"));
@@ -218,38 +253,5 @@ public class FilmDbStorage implements FilmStorage {
         } else {
             return Optional.empty();
         }
-    }
-
-    public List<Film> getFilmsByDirectors(int directorId, String sortBy) {
-        String sql = "select f.id , f.rating_id , f.name , f.description , f.release_date," +
-                " f.duration, r.name_rating, r.mpa_id, count(l.user_id) as total_likes from films" +
-                " as f left join rating r on f.rating_id = r.mpa_id " +
-                "left join likes as l on f.id = l.film_id where " +
-                " f.id in (select film_id from director_films join director where director_id = ?) " +
-                " group by f.id order by " + sortBy;
-        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),directorId);
-    }
-
-    public List<Film> getFilmsBySearch(String query, String[] by) {
-        String fullSort = "";
-        for (String sortPart : by) {
-            if (!fullSort.isBlank()) {
-                fullSort = fullSort + " or ";
-            }
-            if (sortPart.equals("director")) {
-                fullSort = fullSort + " f.id in (select df.film_id from director_films as df join director as d" +
-                        " on df.director_id = d.id where lower(d.name_director) like '%" + query.toLowerCase() + "%') ";
-            } else if (sortPart.equals("title")) {
-                fullSort = fullSort + " lower(f.name) like '%" + query.toLowerCase() + "%' ";
-            } else {
-                throw new ValidationException("часть запроса by ошибочна - " + sortPart);
-            }
-        }
-        String sql = "select f.id , f.rating_id , f.name , f.description , f.release_date," +
-                " f.duration, r.name_rating, r.mpa_id, count(l.user_id) as total_likes from films" +
-                " as f left join rating r on f.rating_id = r.mpa_id " +
-                "left join likes as l on f.id = l.film_id " +
-                "where " + fullSort + " group by f.id order by total_likes desc;";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs));
     }
 }
