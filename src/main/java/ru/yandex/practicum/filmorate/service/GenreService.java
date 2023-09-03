@@ -20,5 +20,4 @@ public class GenreService {
     public Genre getGenreById(int id) {
         return genreStorage.getGenreById(id).orElseThrow(() -> new EntityNotFoundException("Жанр не найден в базе"));
     }
-
 }
