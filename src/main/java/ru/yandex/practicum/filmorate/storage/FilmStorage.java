@@ -23,4 +23,6 @@ public interface FilmStorage {
     List<Film> getRecommendedFilms(List<Integer> recommendedFilmsId);
 
     public List<Film> getCommonFilms(int userId, int friendId);
+
+    public void delFilmById(int filmId);
 }

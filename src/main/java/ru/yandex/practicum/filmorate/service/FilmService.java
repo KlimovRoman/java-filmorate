@@ -53,6 +53,11 @@ public class FilmService {
         return tempFilms;
     }
 
+    public void delFilmById(int filmId) {
+        //реализация фичи в рамках ГП (12 спринт)
+        filmStorage.delFilmById(filmId);
+    }
+
     public List<Film> getCommonFilms(int userId, int friendId) {
         //реализация фичи в рамках ГП (12 спринт)
         List<Film> tempFilms =  filmStorage.getCommonFilms(userId, friendId);

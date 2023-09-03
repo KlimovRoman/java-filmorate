@@ -165,6 +165,15 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs));
     }
 
+    @Override
+    public void delFilmById(int filmId) {
+        String sqlQuery = "DELETE FROM films  WHERE ID = ?";
+        int count =  jdbcTemplate.update(sqlQuery,filmId);
+        if (count == 0) {
+            throw new  EntityNotFoundException("Фильм не найден в базе (удаление не прошло)");
+        }
+    }
+
     private Film makeFilm(ResultSet rs) throws SQLException {
         Film film = new Film();
         film.setId(rs.getInt("id"));
