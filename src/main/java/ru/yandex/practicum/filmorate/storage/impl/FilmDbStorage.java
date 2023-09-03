@@ -154,14 +154,15 @@ public class FilmDbStorage implements FilmStorage {
         //реализация фичи в рамках ГП (12 спринт)
         String sql = "SELECT *\n" +
                 "FROM FILMS f \n" +
+                "LEFT JOIN rating r on f.rating_id = r.mpa_id \n" +
                 "WHERE f.ID IN (\n" +
                 "\tSELECT l.FILM_ID \n" +
-                "\tFROM LIKES l WHERE L.USER_ID = ? \n" +
+                "\tFROM LIKES l WHERE L.USER_ID = " + userId + "\n" +
                 "\tINTERSECT\n" +
                 "\tSELECT l.FILM_ID \n" +
-                "\tFROM LIKES l WHERE L.USER_ID = ? \n" +
-                ")";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),userId,friendId);
+                "\tFROM LIKES l WHERE L.USER_ID = " + friendId + "\n" +
+                ") ";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs));
     }
 
     private Film makeFilm(ResultSet rs) throws SQLException {
