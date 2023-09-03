@@ -20,7 +20,7 @@ public interface FilmStorage {
 
     List<Film> getTopMostLikedFilms(int topCount);
 
-    Optional<Map<Integer, List<Integer>>> getAllLikedFilms();
+    Map<Integer, List<Integer>> getAllLikedFilms();
 
-    Optional<List<Film>> getRecommendedFilms(String rangeId);
+    List<Film> getRecommendedFilms(List<Integer> recommendedFilmsId);
 }

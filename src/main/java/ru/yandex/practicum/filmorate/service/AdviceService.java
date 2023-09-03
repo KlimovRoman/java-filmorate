@@ -51,37 +51,13 @@ public class AdviceService {
     }
 
     private List<Film> getRecommendedFilms(List<Integer> recommendedFilmsId) {
-        int length = recommendedFilmsId.size();
-        StringBuilder rangeId = new StringBuilder();
-        if (length == 0) {
-            rangeId.append(")");
-            log.debug("Recommended film list is empty");
-        }
-        for (int i = 0; i < length; i++) {
-            if (i != length - 1) {
-                rangeId.append(recommendedFilmsId.get(i));
-                rangeId.append(", ");
-            } else {
-                rangeId.append(recommendedFilmsId.get(i));
-                rangeId.append(")");
-            }
-            log.debug("Recommended film list consists " + (length - 1) + " films");
-        }
-        List<Film> recommendedFilms = filmStorage.getRecommendedFilms(rangeId.toString()).get();
+        List<Film> recommendedFilms = filmStorage.getRecommendedFilms(recommendedFilmsId);
         genreStorage.loadGenresForFilm(recommendedFilms);
         return recommendedFilms;
     }
 
     private Integer getUserIdWithEqualInterests(final Integer userId) {
         categorizeAllLikedFilms(userId);
-        if (otherUsersLikedFilmsId.isEmpty()) {
-            log.debug("Nobody liked films");
-            return NOT_EXIST_USER_ID;
-        } else {
-            for (Integer anotherUserId : otherUsersLikedFilmsId.keySet()) {
-                return anotherUserId;
-            }
-        }
         Map<Integer, Integer> identityInterests = countIdentityInterests();
         if (identityInterests.isEmpty()) {
             log.debug("Crossing interests are absent");
@@ -92,7 +68,7 @@ public class AdviceService {
     }
 
     private void categorizeAllLikedFilms(final Integer userId) {
-        allLikedFilmsId = filmStorage.getAllLikedFilms().get();
+        allLikedFilmsId = filmStorage.getAllLikedFilms();
         userLikedFilmsId = allLikedFilmsId.remove(userId);
         otherUsersLikedFilmsId = allLikedFilmsId;
     }

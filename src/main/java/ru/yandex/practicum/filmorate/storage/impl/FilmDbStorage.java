@@ -117,27 +117,37 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Optional<Map<Integer, List<Integer>>> getAllLikedFilms() {
+    public Map<Integer, List<Integer>> getAllLikedFilms() {
         Map<Integer, List<Integer>> allLikedFilms = new HashMap<>();
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(SELECT_ALL_LIKED_FILMS_ID);
         while (rowSet.next()) {
             Integer userId = Integer.parseInt(Objects.requireNonNull(rowSet.getString("user_id")));
             Integer filmId = Integer.parseInt(Objects.requireNonNull(rowSet.getString("film_id")));
-            if (allLikedFilms.containsKey(userId)) {
-                allLikedFilms.get(userId).add(filmId);
-            } else {
-                List<Integer> likedFilmsByUser = new ArrayList<>();
-                likedFilmsByUser.add(filmId);
-                allLikedFilms.put(userId, likedFilmsByUser);
-            }
+            allLikedFilms.computeIfAbsent(userId, key -> new ArrayList<>()).add(filmId);
         }
-        return Optional.of(allLikedFilms);
+        return allLikedFilms;
     }
 
     @Override
-    public Optional<List<Film>> getRecommendedFilms(String rangeId) {
-        return Optional.of(jdbcTemplate.queryForStream(SELECT_RECOMMENDED_FILMS + rangeId,
-                (rs, rowNum) -> makeFilm(rs)).collect(Collectors.toList()));
+    public List<Film> getRecommendedFilms(List<Integer> recommendedFilmsId) {
+        int length = recommendedFilmsId.size();
+        StringBuilder rangeId = new StringBuilder();
+        if (length == 0) {
+            rangeId.append(")");
+            log.debug("Recommended film list is empty");
+        }
+        for (int i = 0; i < length; i++) {
+            if (i != length - 1) {
+                rangeId.append(recommendedFilmsId.get(i));
+                rangeId.append(", ");
+            } else {
+                rangeId.append(recommendedFilmsId.get(i));
+                rangeId.append(")");
+            }
+            log.debug("Recommended film list consists " + (length - 1) + " films");
+        }
+        return jdbcTemplate.queryForStream(SELECT_RECOMMENDED_FILMS + rangeId,
+                (rs, rowNum) -> makeFilm(rs)).collect(Collectors.toList());
     }
 
     private Film makeFilm(ResultSet rs) throws SQLException {
