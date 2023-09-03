@@ -9,6 +9,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -201,12 +202,6 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     public List<Film> getFilmsByDirectors(int directorId, String sortBy) {
-//        String sql = "select f.id , f.rating_id , f.name , f.description , f.release_date," +
-//                " f.duration, r.name_rating, r.mpa_id, count(l.user_id) as total_likes from films" +
-//                " as f left join rating r on f.rating_id = r.mpa_id "
-//                +"left join likes as l on f.id = l.film_id join director_films as df " +
-//                " on df.film_id = f.id where df.director_id = ? group by f.id "
-//                +" order by " + sortBy;//
         String sql = "select f.id , f.rating_id , f.name , f.description , f.release_date," +
                 " f.duration, r.name_rating, r.mpa_id, count(l.user_id) as total_likes from films" +
                 " as f left join rating r on f.rating_id = r.mpa_id " +
@@ -216,18 +211,26 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),directorId);
     }
 
-    public List<Film> getFilmsBySearch(String fullSort) {
-//        String sql = "select f.id, f.rating_id, f.name, f.description, f.release_date, f.duration, r.name_rating, " +
-//                "r.mpa_id, count(l.user_id) as total_likes" +
-//                " from films as f left joint rating r on f.rating_id = r.mpa_id" +
-//                " left join director_films as df on f.id = df.film_id join director as d " +
-//                "on df.director_id = d.id left join likes as l on f.id = l.film_id where " + fullSort + " group by f.id";
-        String sql2 = "select f.id , f.rating_id , f.name , f.description , f.release_date," +
+    public List<Film> getFilmsBySearch(String query, String[] by) {
+        String fullSort = "";
+        for (String sortPart : by) {
+            if (!fullSort.isBlank()) {
+                fullSort = fullSort + " or ";
+            }
+            if (sortPart.equals("director")) {
+                fullSort = fullSort + " f.id in (select df.film_id from director_films as df join director as d" +
+                        " on df.director_id = d.id where lower(d.name_director) like '%" + query.toLowerCase() + "%') ";
+            } else if (sortPart.equals("title")) {
+                fullSort = fullSort + " lower(f.name) like '%" + query.toLowerCase() + "%' ";
+            } else {
+                throw new ValidationException("часть запроса by ошибочна - " + sortPart);
+            }
+        }
+        String sql = "select f.id , f.rating_id , f.name , f.description , f.release_date," +
                 " f.duration, r.name_rating, r.mpa_id, count(l.user_id) as total_likes from films" +
                 " as f left join rating r on f.rating_id = r.mpa_id " +
                 "left join likes as l on f.id = l.film_id " +
                 "where " + fullSort + " group by f.id order by total_likes desc;";
-        return jdbcTemplate.query(sql2, (rs, rowNum) -> makeFilm(rs));
-        //"(select df.film_id from director_films as df join director as d on df.director_id = d.id where d.director_name like '%query%)'"
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs));
     }
 }
