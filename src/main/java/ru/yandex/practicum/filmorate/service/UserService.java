@@ -32,6 +32,9 @@ private final UserStorage userStorage; //поле куда будет перед
         userStorage.delFriend(id, friendId);
     }
 
+    public void delUserById(int userId) {
+        userStorage.delUserById(userId);
+    }
 
     public List<User> getUserFriends(int id) {
        userStorage.getUserById(id).orElseThrow(() -> new EntityNotFoundException("Юзер не найден в базе"));

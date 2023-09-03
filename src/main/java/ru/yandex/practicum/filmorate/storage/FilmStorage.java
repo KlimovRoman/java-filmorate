@@ -21,4 +21,6 @@ public interface FilmStorage {
     public List<Film> getTopMostLikedFilms(int topCount);
 
     public List<Film> getCommonFilms(int userId, int friendId);
+
+    public void delFilmById(int filmId);
 }

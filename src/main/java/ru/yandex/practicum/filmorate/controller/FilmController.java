@@ -41,6 +41,11 @@ public class FilmController {
         return filmService.getCommonFilms(userId, friendId);
     }
 
+    @DeleteMapping("/{filmId}")
+    public void delFilmById(@PathVariable int filmId) {
+        filmService.delFilmById(filmId);
+    }
+
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable int id) {
         return filmService.getFilmById(id);

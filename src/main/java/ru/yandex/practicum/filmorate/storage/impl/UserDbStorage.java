@@ -117,6 +117,15 @@ public class UserDbStorage implements UserStorage {
         return  jdbcTemplate.query(sql, (rs, rowNum) -> commonFriendsMapper(rs));
     }
 
+    @Override
+    public void delUserById(int userId) {
+        String sqlQuery = "DELETE FROM users  WHERE ID = ?";
+        int count =  jdbcTemplate.update(sqlQuery,userId);
+        if (count == 0) {
+            throw new  EntityNotFoundException("Юзер не найден в базе (удаление не прошло)");
+        }
+    }
+
     private User commonFriendsMapper(ResultSet rs) throws SQLException {
         int friendId = rs.getInt("FRIEND_ID");
         return getUserById(friendId).get();
@@ -145,4 +154,6 @@ public class UserDbStorage implements UserStorage {
         user.setBirthday(rs.getDate("birthday").toLocalDate());
         return user;
     }
+
+
 }
