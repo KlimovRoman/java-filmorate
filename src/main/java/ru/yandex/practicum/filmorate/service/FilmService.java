@@ -101,15 +101,6 @@ public class FilmService {
         return listForGenresUpd;
     }
 
-    // методы для валидации
-    private void releaseDateValid(Film filmToCheck) {
-        LocalDate dateToCheck = filmToCheck.getReleaseDate();
-        if (dateToCheck.isBefore(dateForCompare)) {
-            log.info("Валидация не пройдена, дата релиза должна быть после 1895-12-28");
-            throw new ValidationException("Не пройдена валидация");
-        }
-    }
-
     public List<Film> getFilmsByDirectors(int directorId, String sortBy) {
         List<Film> filmsList;
         if (!directorStorage.contains(directorId)) {
@@ -135,5 +126,14 @@ public class FilmService {
         genreStorage.loadGenresForFilm(filmsFound);
         directorStorage.loadDirectorsForFilm(filmsFound);
         return filmsFound;
+    }
+
+    // методы для валидации
+    private void releaseDateValid(Film filmToCheck) {
+        LocalDate dateToCheck = filmToCheck.getReleaseDate();
+        if (dateToCheck.isBefore(dateForCompare)) {
+            log.info("Валидация не пройдена, дата релиза должна быть после 1895-12-28");
+            throw new ValidationException("Не пройдена валидация");
+        }
     }
 }
