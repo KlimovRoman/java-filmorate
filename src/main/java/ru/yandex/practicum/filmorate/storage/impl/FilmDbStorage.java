@@ -146,7 +146,7 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.queryForStream(SELECT_RECOMMENDED_FILMS + rangeId,
                 (rs, rowNum) -> makeFilm(rs)).collect(Collectors.toList());
     }
-  
+
     @Override
     public List<Film> getCommonFilms(int userId, int friendId) {
         //реализация фичи в рамках ГП (12 спринт)
