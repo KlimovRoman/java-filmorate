@@ -6,12 +6,17 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.constant.EventType;
+import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +28,7 @@ import java.util.Optional;
 public class ReviewDbStorage implements ReviewStorage {
 
     private final JdbcTemplate jdbcTemplate;
+    private final EventStorage eventStorage;
 
     @Override
     public Review create(Review review) {
@@ -33,6 +39,17 @@ public class ReviewDbStorage implements ReviewStorage {
                 .withTableName("reviews")
                 .usingGeneratedKeyColumns("id");
         review.setReviewId(simpleJdbcInsert.executeAndReturnKey(toMap(review)).intValue());
+
+        Event event = Event.builder()
+                .userId(review.getUserId())
+                .entityReviewId(review.getReviewId())
+                .entityId(review.getReviewId())
+                .timestamp(Instant.now().toEpochMilli())
+                .operation(OperationType.ADD)
+                .eventType(EventType.REVIEW)
+                .build();
+        eventStorage.addEvent(event);
+
         return review;
     }
 
@@ -48,13 +65,37 @@ public class ReviewDbStorage implements ReviewStorage {
             return Optional.empty();
         }
 
+        Review reviewFromDb = findById(review.getReviewId()).get();
+        Event event = Event.builder()
+                .userId(reviewFromDb.getUserId())
+                .entityReviewId(review.getReviewId())
+                .entityId(review.getReviewId())
+                .timestamp(Instant.now().toEpochMilli())
+                .operation(OperationType.UPDATE)
+                .eventType(EventType.REVIEW)
+                .build();
+        eventStorage.addEvent(event);
+
         return findById(review.getReviewId());
     }
 
     @Override
     public void delete(int id) {
         String sqlQuery = "DELETE FROM REVIEWS WHERE ID = ?";
+
+        Review review = findById(id).get();
+
         jdbcTemplate.update(sqlQuery, id);
+
+        Event event = Event.builder()
+                .userId(review.getUserId())
+                .entityReviewId(review.getReviewId())
+                .entityId(review.getReviewId())
+                .timestamp(Instant.now().toEpochMilli())
+                .operation(OperationType.REMOVE)
+                .eventType(EventType.REVIEW)
+                .build();
+        eventStorage.addEvent(event);
     }
 
     @Override
