@@ -22,7 +22,7 @@ public interface FilmStorage {
 
     public void delLike(int filmId, int userLikeId);
 
-    public List<Film> getTopMostLikedFilms(int topCount);
+    public List<Film> getTopMostLikedFilms(int topCount, Integer year);
 
     public List<Film> getCommonFilms(int userId, int friendId);
 
