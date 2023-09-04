@@ -17,16 +17,23 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.stream.Collectors;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
 
 @Slf4j
 @Primary
 @Component
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
-
+    private static final String SELECT_RECOMMENDED_FILMS = "SELECT f.*, r.*, " +
+            "FROM films f INNER JOIN rating r ON f.rating_id = r.mpa_id " +
+            "WHERE f.id IN (";
+    private static final String SELECT_ALL_LIKED_FILMS_ID = "SELECT * FROM likes";
 
     @Autowired
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
@@ -52,7 +59,6 @@ public class FilmDbStorage implements FilmStorage {
         return filmToAdd;
     }
 
-
     @Override
     public Film updFilm(Film filmToUpd) {
         int filmId = filmToUpd.getId();
@@ -70,14 +76,12 @@ public class FilmDbStorage implements FilmStorage {
         return filmToUpd;
     }
 
-
     @Override
     public List<Film> getFilms() {
         // полученные фильмы не обогащены жанрами, будут обогащены в сервисе
         String sql = "select * from films f join rating r on f.rating_id = r.mpa_id";
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs));
     }
-
 
     @Override
     public Optional<Film> getFilmById(int id) {
@@ -86,7 +90,6 @@ public class FilmDbStorage implements FilmStorage {
         SqlRowSet filmRows = jdbcTemplate.queryForRowSet(sql, id);
         return filmMapper(filmRows);
     }
-
 
     @Override
     public void addLike(int filmId, int userLikeId) {
@@ -108,6 +111,40 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getTopMostLikedFilms(int topCount) {
         String sql = "select f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id, count(user_id) from films f  left join likes l on l.film_id = f.id left join  rating r on f.rating_id = r.mpa_id group by f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id order by count(user_id) desc limit ?";
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),topCount);
+    }
+
+    @Override
+    public Map<Integer, List<Integer>> getAllLikedFilms() {
+        Map<Integer, List<Integer>> allLikedFilms = new HashMap<>();
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(SELECT_ALL_LIKED_FILMS_ID);
+        while (rowSet.next()) {
+            Integer userId = Integer.parseInt(Objects.requireNonNull(rowSet.getString("user_id")));
+            Integer filmId = Integer.parseInt(Objects.requireNonNull(rowSet.getString("film_id")));
+            allLikedFilms.computeIfAbsent(userId, key -> new ArrayList<>()).add(filmId);
+        }
+        return allLikedFilms;
+    }
+
+    @Override
+    public List<Film> getRecommendedFilms(List<Integer> recommendedFilmsId) {
+        int length = recommendedFilmsId.size();
+        StringBuilder rangeId = new StringBuilder();
+        if (length == 0) {
+            rangeId.append(")");
+            log.debug("Recommended film list is empty");
+        }
+        for (int i = 0; i < length; i++) {
+            if (i != length - 1) {
+                rangeId.append(recommendedFilmsId.get(i));
+                rangeId.append(", ");
+            } else {
+                rangeId.append(recommendedFilmsId.get(i));
+                rangeId.append(")");
+            }
+            log.debug("Recommended film list consists " + (length - 1) + " films");
+        }
+        return jdbcTemplate.queryForStream(SELECT_RECOMMENDED_FILMS + rangeId,
+                (rs, rowNum) -> makeFilm(rs)).collect(Collectors.toList());
     }
 
     @Override
