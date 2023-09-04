@@ -136,9 +136,39 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getTopMostLikedFilms(int topCount) {
-        String sql = "select f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id, count(user_id) from films f  left join likes l on l.film_id = f.id left join  rating r on f.rating_id = r.mpa_id group by f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id order by count(user_id) desc limit ?";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),topCount);
+    public List<Film> getTopMostLikedFilms(int topCount, Integer year) {
+        String sql;
+
+        String sqlStart = "select " +
+                "f.id," +
+                "f.rating_id," +
+                "f.name," +
+                "f.description," +
+                "f.release_date," +
+                "f.duration," +
+                "r.name_rating," +
+                "r.mpa_id, " +
+                "count(user_id) " +
+
+                "from films f  " +
+
+                "left join likes l on l.film_id = f.id " +
+                "left join  rating r on f.rating_id = r.mpa_id";
+        String sqlFinish =
+                "group by f.id " +
+                        "order by count(user_id) " +
+                        "desc limit ?;";
+
+        if (year != null) {
+            String sqlHaveRequiredYear = "where EXTRACT (year FROM CAST (f.release_date AS date))  = ?";
+            sql = String.join(" ", sqlStart, sqlHaveRequiredYear, sqlFinish);
+
+            return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), year, topCount);
+
+        } else {
+            sql = String.join(" ", sqlStart, sqlFinish);
+            return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), topCount);
+        }
     }
 
     @Override
