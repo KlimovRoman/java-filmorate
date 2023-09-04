@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -111,6 +112,7 @@ public class FilmService {
             });
 
             listForGenresUpd.removeAll(forDeletion);
+            log.info("выборка популярных фильмов влючает выбранный жанр: " + genreId);
         }
 
         return listForGenresUpd;
