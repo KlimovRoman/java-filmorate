@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.util.List;
@@ -64,6 +65,11 @@ private final UserStorage userStorage; //поле куда будет перед
 
     public User getUserById(int id) {
         return userStorage.getUserById(id).orElseThrow(() -> new  EntityNotFoundException("пользователь не найден!"));
+    }
+
+    public List<Event> getFeedById(int id) {
+        userStorage.getUserById(id).orElseThrow(() -> new  EntityNotFoundException("пользователь не найден!"));
+        return userStorage.getFeedById(id);
     }
 
     private void nameValidationAndSetName(User usr) {

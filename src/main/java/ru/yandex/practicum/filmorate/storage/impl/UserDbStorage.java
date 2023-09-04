@@ -8,14 +8,19 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.constant.EventType;
+import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.*;
 
 @Slf4j
@@ -23,10 +28,13 @@ import java.util.*;
 @Component
 public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final EventStorage eventStorage;
+
 
     @Autowired
-    public UserDbStorage(JdbcTemplate jdbcTemplate) {
+    public UserDbStorage(JdbcTemplate jdbcTemplate, EventStorage eventStorage) {
         this.jdbcTemplate = jdbcTemplate;
+        this.eventStorage = eventStorage;
     }
 
     @Override
@@ -86,6 +94,16 @@ public class UserDbStorage implements UserStorage {
         String sqlQuery = "insert into friendship(user_id, friend_id) " +
                 "values (?, ?)";
         jdbcTemplate.update(sqlQuery, userId, friendId);
+
+        Event event = Event.builder()
+                .userId(userId)
+                .entityUserId(friendId)
+                .entityId(friendId)
+                .timestamp(Instant.now().toEpochMilli())
+                .operation(OperationType.ADD)
+                .eventType(EventType.FRIEND)
+                .build();
+        eventStorage.addEvent(event);
     }
 
     @Override
@@ -95,6 +113,16 @@ public class UserDbStorage implements UserStorage {
         if (count == 0) {
             throw new  EntityNotFoundException("Юзер не найден в базе(удаление не прошло)");
         }
+
+        Event event = Event.builder()
+                .userId(userId)
+                .entityUserId(friendId)
+                .entityId(friendId)
+                .timestamp(Instant.now().toEpochMilli())
+                .operation(OperationType.REMOVE)
+                .eventType(EventType.FRIEND)
+                .build();
+        eventStorage.addEvent(event);
     }
 
     @Override
@@ -124,6 +152,17 @@ public class UserDbStorage implements UserStorage {
         if (count == 0) {
             throw new  EntityNotFoundException("Юзер не найден в базе (удаление не прошло)");
         }
+    }
+
+    @Override
+    public List<Event> getFeedById(int userId) {
+        String sqlQuery =
+                "select * " +
+                        "from events " +
+                        "where user_id = ? " +
+                        "order by user_id; ";
+        List<Event> events = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> eventStorage.makeEvent(rs), userId);
+        return events;
     }
 
     private User commonFriendsMapper(ResultSet rs) throws SQLException {

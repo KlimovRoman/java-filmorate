@@ -8,15 +8,20 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.constant.EventType;
+import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Map;
@@ -30,14 +35,17 @@ import java.util.Objects;
 @Component
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final EventStorage eventStorage;
+
     private static final String SELECT_RECOMMENDED_FILMS = "SELECT f.*, r.*, " +
             "FROM films f INNER JOIN rating r ON f.rating_id = r.mpa_id " +
             "WHERE f.id IN (";
     private static final String SELECT_ALL_LIKED_FILMS_ID = "SELECT * FROM likes";
 
     @Autowired
-    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
+    public FilmDbStorage(JdbcTemplate jdbcTemplate, EventStorage eventStorage) {
         this.jdbcTemplate = jdbcTemplate;
+        this.eventStorage = eventStorage;
     }
 
     @Override
@@ -96,6 +104,16 @@ public class FilmDbStorage implements FilmStorage {
         String sqlQuery = "insert into likes(film_id, user_id) " +
                 "values (?, ?)";
         jdbcTemplate.update(sqlQuery, filmId, userLikeId);
+
+        Event event = Event.builder()
+                .userId(userLikeId)
+                .entityFilmId(filmId)
+                .entityId(filmId)
+                .timestamp(Instant.now().toEpochMilli())
+                .operation(OperationType.ADD)
+                .eventType(EventType.LIKE)
+                .build();
+        eventStorage.addEvent(event);
     }
 
     @Override
@@ -105,6 +123,16 @@ public class FilmDbStorage implements FilmStorage {
        if (count == 0) {
            throw new  EntityNotFoundException("Фильм не найден в базе");
        }
+
+        Event event = Event.builder()
+                .userId(userLikeId)
+                .entityFilmId(filmId)
+                .entityId(filmId)
+                .timestamp(Instant.now().toEpochMilli())
+                .operation(OperationType.REMOVE)
+                .eventType(EventType.LIKE)
+                .build();
+        eventStorage.addEvent(event);
     }
 
     @Override
