@@ -27,6 +27,7 @@ public class AdviceService {
     private static final int NOT_EXIST_USER_ID = 0;
 
     public List<Film> getRecommendations(final Integer userId) {
+        //Групповой проект
         checkUser(userId);
         Integer idUserWithEqualInterests = getUserIdWithEqualInterests(userId);
         if (idUserWithEqualInterests == NOT_EXIST_USER_ID) {
