@@ -59,7 +59,7 @@ public class FilmDbStorage implements FilmStorage {
             stmt.setDouble(5, filmToAdd.getDuration());
             return stmt;
         }, keyHolder);
-        int newFilmID =  keyHolder.getKey().intValue();
+        int newFilmID = keyHolder.getKey().intValue();
         filmToAdd.setId(newFilmID);
         return filmToAdd;
     }
@@ -72,12 +72,12 @@ public class FilmDbStorage implements FilmStorage {
                 "rating_id = ?, name = ?, description = ?, release_date = ?, duration = ? " +
                 "where id = ?";
         jdbcTemplate.update(sqlQuery,
-                 filmToUpd.getMpa().getId(),
-                 filmToUpd.getName(),
-                 filmToUpd.getDescription(),
-                 Date.valueOf(filmToUpd.getReleaseDate()),
-                 filmToUpd.getDuration(),
-                 filmToUpd.getId());
+                filmToUpd.getMpa().getId(),
+                filmToUpd.getName(),
+                filmToUpd.getDescription(),
+                Date.valueOf(filmToUpd.getReleaseDate()),
+                filmToUpd.getDuration(),
+                filmToUpd.getId());
         return filmToUpd;
     }
 
@@ -118,11 +118,11 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void delLike(int filmId, int userLikeId) {
-       String sqlQuery = "delete from likes where film_id = " + filmId + " and user_id = " + userLikeId;
-       int count =  jdbcTemplate.update(sqlQuery);
-       if (count == 0) {
-           throw new  EntityNotFoundException("Фильм не найден в базе");
-       }
+        String sqlQuery = "delete from likes where film_id = " + filmId + " and user_id = " + userLikeId;
+        int count = jdbcTemplate.update(sqlQuery);
+        if (count == 0) {
+            throw new EntityNotFoundException("Фильм не найден в базе");
+        }
 
         Event event = Event.builder()
                 .userId(userLikeId)
@@ -209,6 +209,7 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.queryForStream(SELECT_RECOMMENDED_FILMS + rangeId,
                 (rs, rowNum) -> makeFilm(rs)).collect(Collectors.toList());
     }
+
     @Override
     public List<Film> getCommonFilms(int userId, int friendId) {
         //реализация фичи в рамках ГП (12 спринт)
@@ -247,9 +248,9 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public void delFilmById(int filmId) {
         String sqlQuery = "DELETE FROM films  WHERE ID = ?";
-        int count =  jdbcTemplate.update(sqlQuery,filmId);
+        int count = jdbcTemplate.update(sqlQuery, filmId);
         if (count == 0) {
-            throw new  EntityNotFoundException("Фильм не найден в базе (удаление не прошло)");
+            throw new EntityNotFoundException("Фильм не найден в базе (удаление не прошло)");
         }
     }
 
@@ -261,7 +262,7 @@ public class FilmDbStorage implements FilmStorage {
                 "left join likes as l on f.id = l.film_id where " +
                 " f.id in (select film_id from director_films join director where director_id = ?) " +
                 " group by f.id order by " + sortBy;
-        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),directorId);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), directorId);
     }
 
     @Override

@@ -23,7 +23,7 @@ public class FilmService {
     private final GenreStorage genreStorage;
     private final DirectorStorage directorStorage;
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private final LocalDate dateForCompare =  LocalDate.parse("1895-12-28",formatter);
+    private final LocalDate dateForCompare = LocalDate.parse("1895-12-28", formatter);
 
     //связали зависимостью  сервис и хранилище
     @Autowired
@@ -36,7 +36,7 @@ public class FilmService {
     public Film addFilm(Film filmToAdd) {
         releaseDateValid(filmToAdd);
         Film filmAfterAdd = filmStorage.addFilm(filmToAdd);
-        LinkedHashSet<Genre> genres =  filmAfterAdd.getGenres();
+        LinkedHashSet<Genre> genres = filmAfterAdd.getGenres();
         //инсертим жанры одним батчом
         genreStorage.gernesBatchInsert(genres, filmAfterAdd.getId());
 
@@ -50,7 +50,7 @@ public class FilmService {
         releaseDateValid(filmToUpd);
         Film filmAfterUpd = filmStorage.updFilm(filmToUpd);
         genreStorage.delAllGenresFromFilm(filmAfterUpd.getId());//удаляем жанры чтобы потом записать новые
-        LinkedHashSet<Genre> genres =  filmAfterUpd.getGenres();
+        LinkedHashSet<Genre> genres = filmAfterUpd.getGenres();
         //инсертим жанры одним батчом
         genreStorage.gernesBatchInsert(genres, filmAfterUpd.getId());
 
@@ -62,7 +62,7 @@ public class FilmService {
     }
 
     public List<Film> getFilms() {
-        List<Film> tempFilms =  filmStorage.getFilms();
+        List<Film> tempFilms = filmStorage.getFilms();
         genreStorage.loadGenresForFilm(tempFilms); //обогатили фильмы жанрами
         directorStorage.loadDirectorsForFilm(tempFilms);//обогатили фильмы директорами
         return tempFilms;
@@ -75,7 +75,7 @@ public class FilmService {
 
     public List<Film> getCommonFilms(int userId, int friendId) {
         //реализация фичи в рамках ГП (12 спринт)
-        List<Film> tempFilms =  filmStorage.getCommonFilms(userId, friendId);
+        List<Film> tempFilms = filmStorage.getCommonFilms(userId, friendId);
         genreStorage.loadGenresForFilm(tempFilms); //обогатили фильмы жанрами
         return tempFilms;
     }
@@ -89,10 +89,10 @@ public class FilmService {
     }
 
     public Film getFilmById(int id) {
-       Film film =  filmStorage.getFilmById(id).orElseThrow(() -> new EntityNotFoundException("Фильм не найден в базе"));
-       genreStorage.loadGenresForFilm(List.of(film));
-       directorStorage.loadDirectorsForFilm(List.of(film));
-       return film;
+        Film film = filmStorage.getFilmById(id).orElseThrow(() -> new EntityNotFoundException("Фильм не найден в базе"));
+        genreStorage.loadGenresForFilm(List.of(film));
+        directorStorage.loadDirectorsForFilm(List.of(film));
+        return film;
     }
 
     public List<Film> getTopMostLikedFilms(int topCount, Integer genreId, Integer year) {
