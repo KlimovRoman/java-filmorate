@@ -12,23 +12,20 @@ import ru.yandex.practicum.filmorate.constant.EventType;
 import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Objects;
 
 @Slf4j
 @Primary
@@ -62,7 +59,7 @@ public class FilmDbStorage implements FilmStorage {
             stmt.setDouble(5, filmToAdd.getDuration());
             return stmt;
         }, keyHolder);
-        int newFilmID =  keyHolder.getKey().intValue();
+        int newFilmID = keyHolder.getKey().intValue();
         filmToAdd.setId(newFilmID);
         return filmToAdd;
     }
@@ -75,12 +72,12 @@ public class FilmDbStorage implements FilmStorage {
                 "rating_id = ?, name = ?, description = ?, release_date = ?, duration = ? " +
                 "where id = ?";
         jdbcTemplate.update(sqlQuery,
-                 filmToUpd.getMpa().getId(),
-                 filmToUpd.getName(),
-                 filmToUpd.getDescription(),
-                 Date.valueOf(filmToUpd.getReleaseDate()),
-                 filmToUpd.getDuration(),
-                 filmToUpd.getId());
+                filmToUpd.getMpa().getId(),
+                filmToUpd.getName(),
+                filmToUpd.getDescription(),
+                Date.valueOf(filmToUpd.getReleaseDate()),
+                filmToUpd.getDuration(),
+                filmToUpd.getId());
         return filmToUpd;
     }
 
@@ -101,10 +98,13 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void addLike(int filmId, int userLikeId) {
-        String sqlQuery = "insert into likes(film_id, user_id) " +
-                "values (?, ?)";
-        jdbcTemplate.update(sqlQuery, filmId, userLikeId);
+        if (!isContainsLike(filmId, userLikeId)) {
 
+            String sqlQuery = "insert into likes(film_id, user_id) " +
+                    "values (?, ?)";
+            jdbcTemplate.update(sqlQuery, filmId, userLikeId);
+
+        }
         Event event = Event.builder()
                 .userId(userLikeId)
                 .entityFilmId(filmId)
@@ -118,11 +118,11 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void delLike(int filmId, int userLikeId) {
-       String sqlQuery = "delete from likes where film_id = " + filmId + " and user_id = " + userLikeId;
-       int count =  jdbcTemplate.update(sqlQuery);
-       if (count == 0) {
-           throw new  EntityNotFoundException("Фильм не найден в базе");
-       }
+        String sqlQuery = "delete from likes where film_id = " + filmId + " and user_id = " + userLikeId;
+        int count = jdbcTemplate.update(sqlQuery);
+        if (count == 0) {
+            throw new EntityNotFoundException("Фильм не найден в базе");
+        }
 
         Event event = Event.builder()
                 .userId(userLikeId)
@@ -148,12 +148,16 @@ public class FilmDbStorage implements FilmStorage {
                 "f.duration," +
                 "r.name_rating," +
                 "r.mpa_id, " +
-                "count(user_id) " +
+                "count(user_id), " +
+                "df.director_id as director_id, " +
+                "d.name_director as name_director " +
 
                 "from films f  " +
 
                 "left join likes l on l.film_id = f.id " +
-                "left join  rating r on f.rating_id = r.mpa_id";
+                "left join rating r on f.rating_id = r.mpa_id " +
+                "left join director_films df on f.id = df.film_id " +
+                "left join director d on df.director_id = d.id ";
         String sqlFinish =
                 "group by f.id " +
                         "order by count(user_id) " +
@@ -163,11 +167,12 @@ public class FilmDbStorage implements FilmStorage {
             String sqlHaveRequiredYear = "where EXTRACT (year FROM CAST (f.release_date AS date))  = ?";
             sql = String.join(" ", sqlStart, sqlHaveRequiredYear, sqlFinish);
 
-            return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), year, topCount);
+            log.info("выборка популярных фильмов влючает выбранный год: " + year);
+            return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmWithDirector(rs), year, topCount);
 
         } else {
             sql = String.join(" ", sqlStart, sqlFinish);
-            return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), topCount);
+            return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmWithDirector(rs), topCount);
         }
     }
 
@@ -243,9 +248,9 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public void delFilmById(int filmId) {
         String sqlQuery = "DELETE FROM films  WHERE ID = ?";
-        int count =  jdbcTemplate.update(sqlQuery,filmId);
+        int count = jdbcTemplate.update(sqlQuery, filmId);
         if (count == 0) {
-            throw new  EntityNotFoundException("Фильм не найден в базе (удаление не прошло)");
+            throw new EntityNotFoundException("Фильм не найден в базе (удаление не прошло)");
         }
     }
 
@@ -257,7 +262,7 @@ public class FilmDbStorage implements FilmStorage {
                 "left join likes as l on f.id = l.film_id where " +
                 " f.id in (select film_id from director_films join director where director_id = ?) " +
                 " group by f.id order by " + sortBy;
-        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),directorId);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), directorId);
     }
 
     @Override
@@ -284,6 +289,16 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs));
     }
 
+    private boolean isContainsLike(int filmId, int userId) {
+        String sql = "select film_id from likes where film_id = ? and user_id =?";
+        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, filmId, userId);
+
+        if (sqlRowSet.next()) {
+            return true;
+        }
+        return false;
+    }
+
     private Film makeFilm(ResultSet rs) throws SQLException {
         Film film = new Film();
         film.setId(rs.getInt("id"));
@@ -292,6 +307,28 @@ public class FilmDbStorage implements FilmStorage {
         film.setDuration(rs.getDouble("duration"));
         film.setReleaseDate(rs.getDate("release_date").toLocalDate());
         film.setMpa(new Mpa(rs.getInt("mpa_id"), rs.getString("name_rating")));
+        film.setDirectors(new HashSet<>());
+        return film;
+    }
+
+    private Film makeFilmWithDirector(ResultSet rs) throws SQLException {
+        Film film = new Film();
+        film.setId(rs.getInt("id"));
+        film.setDescription(rs.getString("description"));
+        film.setName(rs.getString("name"));
+        film.setDuration(rs.getDouble("duration"));
+        film.setReleaseDate(rs.getDate("release_date").toLocalDate());
+        film.setMpa(new Mpa(rs.getInt("mpa_id"), rs.getString("name_rating")));
+
+        Director director = new Director(rs.getInt("director_id"), rs.getString("name_director"));
+        if (director.getId() != 0) {
+            Set<Director> directors = new HashSet<>();
+            directors.add(director);
+            film.setDirectors(directors);
+        } else {
+            film.setDirectors(new HashSet<>());
+        }
+
         return film;
     }
 
