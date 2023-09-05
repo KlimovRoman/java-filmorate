@@ -11,7 +11,6 @@ import javax.validation.Valid;
 import java.util.List;
 
 @RequiredArgsConstructor
-@Validated
 @Slf4j
 @RestController
 @RequestMapping("/directors")
@@ -44,6 +43,5 @@ public class DirectorController {
     @DeleteMapping("/{id}")
     public void delDirector(@PathVariable int id) {
         directorService.delDirector(id);
-        return;
     }
 }
