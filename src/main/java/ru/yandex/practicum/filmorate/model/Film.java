@@ -25,7 +25,7 @@ public class Film {
     @NotNull @Positive
     private Double duration;
 
-    private Set<Director> directors;
+    private Set<Director> directors = new HashSet<>();
 
     public Film(int id) {
         this.id = id;
