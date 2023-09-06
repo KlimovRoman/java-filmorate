@@ -331,6 +331,7 @@ public class FilmDbStorage implements FilmStorage {
             film.setDuration(filmRows.getDouble("duration"));
             film.setReleaseDate(filmRows.getDate("release_date").toLocalDate());
             film.setMpa(new Mpa(filmRows.getInt("mpa_id"), filmRows.getString("name_rating")));
+            film.setDirectors(new HashSet<>());
             return Optional.of(film);
         } else {
             return Optional.empty();
