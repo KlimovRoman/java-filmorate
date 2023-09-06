@@ -134,15 +134,14 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getCommonFriends(int id, int otherId) {
-        List<User> listForReturn = new ArrayList<>();
-        String sql = "select f.FRIEND_ID  \n" +
+        String sql = "select u.id, u.name, u.login, u.email, u.birthday \n" +
                 "from friendship f left join users u on f.friend_id = u.id\n" +
                 "where user_id = " + id + "\n" +
                 "INTERSECT\n" +
-                "select f.FRIEND_ID  \n" +
+                "select u.id, u.name, u.login, u.email, u.birthday \n" +
                 "from friendship f left join users u on f.friend_id = u.id\n" +
                 "where user_id = " + otherId;
-        return  jdbcTemplate.query(sql, (rs, rowNum) -> commonFriendsMapper(rs));
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs));
     }
 
     @Override
@@ -165,10 +164,7 @@ public class UserDbStorage implements UserStorage {
         return events;
     }
 
-    private User commonFriendsMapper(ResultSet rs) throws SQLException {
-        int friendId = rs.getInt("FRIEND_ID");
-        return getUserById(friendId).get();
-    }
+
 
     private Optional<User> userMapper(SqlRowSet userRows) {
         if (userRows.next()) {
