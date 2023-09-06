@@ -12,11 +12,11 @@ import java.sql.SQLException;
 import java.util.List;
 
 @Component
-public class EventDbStorage implements ru.yandex.practicum.filmorate.storage.EventDbStorage {
+public class EventStorage implements ru.yandex.practicum.filmorate.storage.EventStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public EventDbStorage(JdbcTemplate jdbcTemplate) {
+    public EventStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 

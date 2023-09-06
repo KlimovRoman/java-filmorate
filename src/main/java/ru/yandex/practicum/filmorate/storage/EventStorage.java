@@ -6,7 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-public interface EventDbStorage {
+public interface EventStorage {
     List<Event> getFeedByUserId(int userId);
 
     Event makeEvent(ResultSet rs) throws SQLException;

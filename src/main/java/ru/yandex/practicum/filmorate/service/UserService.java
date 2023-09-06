@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.EventDbStorage;
+import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
@@ -13,13 +13,13 @@ import java.util.List;
 @Service
 public class UserService {
     private final UserStorage userStorage; //поле куда будет передано хранилище через контструктор с помощью зависимостей
-    private final EventDbStorage eventDbStorage;
+    private final EventStorage eventStorage;
 
     //связали зависимостью  сервис и хранилище
     @Autowired
-    public UserService(UserStorage userStorage, EventDbStorage eventDbStorage) {
+    public UserService(UserStorage userStorage, EventStorage eventStorage) {
         this.userStorage = userStorage;
-        this.eventDbStorage = eventDbStorage;
+        this.eventStorage = eventStorage;
     }
 
     public void addFriend(int id, int friendId) {
@@ -71,7 +71,7 @@ public class UserService {
 
     public List<Event> getFeedByUserId(int id) {
         userStorage.getUserById(id).orElseThrow(() -> new EntityNotFoundException("пользователь не найден!"));
-        return eventDbStorage.getFeedByUserId(id);
+        return eventStorage.getFeedByUserId(id);
     }
 
     private void nameValidationAndSetName(User usr) {
