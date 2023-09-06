@@ -2,22 +2,17 @@ package ru.yandex.practicum.filmorate.storage.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.constant.EventType;
 import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.model.Event;
-import ru.yandex.practicum.filmorate.storage.EventStorage;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Instant;
+import java.util.List;
 
 @Component
-public class EventDbStorage implements EventStorage {
+public class EventDbStorage implements ru.yandex.practicum.filmorate.storage.EventDbStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
@@ -25,30 +20,15 @@ public class EventDbStorage implements EventStorage {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-
     @Override
-    public void addEvent(Event event) {
-        String sqlQueryOnCreateEvent = "insert into events(" +
-                "user_id, " +
-                "entity_id, " +
-                "time, " +
-                "operation_type, " +
-                "event_type) " +
-
-                "values (?, ?, ?, ?, ?)";
-
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(connection -> {
-            PreparedStatement stmt = connection.prepareStatement(sqlQueryOnCreateEvent, new String[]{"id"});
-
-            stmt.setLong(1, event.getUserId());
-            stmt.setLong(2, event.getEntityId());
-            stmt.setTimestamp(3, Timestamp.from(Instant.ofEpochMilli(event.getTimestamp())));
-            stmt.setString(4, event.getOperation().toString());
-            stmt.setString(5, event.getEventType().toString());
-
-            return stmt;
-        }, keyHolder);
+    public List<Event> getFeedByUserId(int userId) {
+        String sqlQuery =
+                "select * " +
+                        "from events " +
+                        "where user_id = ? " +
+                        "order by user_id; ";
+        List<Event> events = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeEvent(rs), userId);
+        return events;
     }
 
     @Override

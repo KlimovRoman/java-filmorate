@@ -13,13 +13,10 @@ import ru.yandex.practicum.filmorate.constant.EventType;
 import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
+import java.sql.*;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,7 +26,6 @@ import java.util.stream.Collectors;
 @Component
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
-    private final EventStorage eventStorage;
 
     private static final String SELECT_RECOMMENDED_FILMS = "SELECT f.*, r.*, " +
             "FROM films f INNER JOIN rating r ON f.rating_id = r.mpa_id " +
@@ -37,9 +33,8 @@ public class FilmDbStorage implements FilmStorage {
     private static final String SELECT_ALL_LIKED_FILMS_ID = "SELECT * FROM likes";
 
     @Autowired
-    public FilmDbStorage(JdbcTemplate jdbcTemplate, EventStorage eventStorage) {
+    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.eventStorage = eventStorage;
     }
 
     @Override
@@ -110,7 +105,7 @@ public class FilmDbStorage implements FilmStorage {
                 .operation(OperationType.ADD)
                 .eventType(EventType.LIKE)
                 .build();
-        eventStorage.addEvent(event);
+        addEvent(event);
     }
 
     @Override
@@ -129,7 +124,7 @@ public class FilmDbStorage implements FilmStorage {
                 .operation(OperationType.REMOVE)
                 .eventType(EventType.LIKE)
                 .build();
-        eventStorage.addEvent(event);
+        addEvent(event);
     }
 
     @Override
@@ -342,5 +337,29 @@ public class FilmDbStorage implements FilmStorage {
         } else {
             return Optional.empty();
         }
+    }
+
+    private void addEvent(Event event) {
+        String sqlQueryOnCreateEvent = "insert into events(" +
+                "user_id, " +
+                "entity_id, " +
+                "time, " +
+                "operation_type, " +
+                "event_type) " +
+
+                "values (?, ?, ?, ?, ?)";
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement stmt = connection.prepareStatement(sqlQueryOnCreateEvent, new String[]{"id"});
+
+            stmt.setLong(1, event.getUserId());
+            stmt.setLong(2, event.getEntityId());
+            stmt.setTimestamp(3, Timestamp.from(Instant.ofEpochMilli(event.getTimestamp())));
+            stmt.setString(4, event.getOperation().toString());
+            stmt.setString(5, event.getEventType().toString());
+
+            return stmt;
+        }, keyHolder);
     }
 }

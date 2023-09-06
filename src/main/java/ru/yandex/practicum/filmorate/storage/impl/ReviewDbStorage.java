@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.constant.EventType;
@@ -11,11 +13,12 @@ import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Review;
-import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +31,6 @@ import java.util.Optional;
 public class ReviewDbStorage implements ReviewStorage {
 
     private final JdbcTemplate jdbcTemplate;
-    private final EventStorage eventStorage;
 
     @Override
     public Review create(Review review) {
@@ -48,7 +50,7 @@ public class ReviewDbStorage implements ReviewStorage {
                 .operation(OperationType.ADD)
                 .eventType(EventType.REVIEW)
                 .build();
-        eventStorage.addEvent(event);
+        addEvent(event);
 
         return review;
     }
@@ -74,18 +76,14 @@ public class ReviewDbStorage implements ReviewStorage {
                 .operation(OperationType.UPDATE)
                 .eventType(EventType.REVIEW)
                 .build();
-        eventStorage.addEvent(event);
+        addEvent(event);
 
         return findById(review.getReviewId());
     }
 
     @Override
-    public void delete(int id) {
+    public void delete(Review review) {
         String sqlQuery = "DELETE FROM REVIEWS WHERE ID = ?";
-
-        Review review = findById(id).get();
-
-        jdbcTemplate.update(sqlQuery, id);
 
         Event event = Event.builder()
                 .userId(review.getUserId())
@@ -95,7 +93,9 @@ public class ReviewDbStorage implements ReviewStorage {
                 .operation(OperationType.REMOVE)
                 .eventType(EventType.REVIEW)
                 .build();
-        eventStorage.addEvent(event);
+        addEvent(event);
+
+        jdbcTemplate.update(sqlQuery, review.getReviewId());
     }
 
     @Override
@@ -177,5 +177,29 @@ public class ReviewDbStorage implements ReviewStorage {
             log.error(message);
             throw new EntityNotFoundException(message);
         }
+    }
+
+    private void addEvent(Event event) {
+        String sqlQueryOnCreateEvent = "insert into events(" +
+                "user_id, " +
+                "entity_id, " +
+                "time, " +
+                "operation_type, " +
+                "event_type) " +
+
+                "values (?, ?, ?, ?, ?)";
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement stmt = connection.prepareStatement(sqlQueryOnCreateEvent, new String[]{"id"});
+
+            stmt.setLong(1, event.getUserId());
+            stmt.setLong(2, event.getEntityId());
+            stmt.setTimestamp(3, Timestamp.from(Instant.ofEpochMilli(event.getTimestamp())));
+            stmt.setString(4, event.getOperation().toString());
+            stmt.setString(5, event.getEventType().toString());
+
+            return stmt;
+        }, keyHolder);
     }
 }
