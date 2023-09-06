@@ -37,7 +37,6 @@ public class FilmDbStorage implements FilmStorage {
             "GROUP BY FILM_ID " +
             "ORDER BY COUNT(FILM_ID IN (SELECT FILM_ID FROM LIKES WHERE USER_ID = ?)) DESC " +
             "LIMIT 10";
-    private final EventStorage eventStorage;
 
     @Autowired
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
