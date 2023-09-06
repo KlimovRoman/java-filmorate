@@ -99,26 +99,11 @@ public class FilmService {
     }
 
     public List<Film> getTopMostLikedFilms(int topCount, Integer genreId, Integer year) {
-        List<Film> listForGenresUpd = filmStorage.getTopMostLikedFilms(topCount, year);
-        genreStorage.loadGenresForFilm(listForGenresUpd);
+        List<Film> popularFilms = filmStorage.getTopMostLikedFilms(topCount, genreId, year);
+        genreStorage.loadGenresForFilm(popularFilms);
+        directorStorage.loadDirectorsForFilm(popularFilms);
 
-        List<Film> forDeletion = new ArrayList<>();
-        if (!listForGenresUpd.isEmpty() && genreId != null) {
-
-            listForGenresUpd.forEach(film -> {
-                Set<Genre> genres = film.getGenres();
-                Optional<Genre> genre = genreStorage.getGenreById(genreId);
-
-                if (genres.isEmpty() || !genres.contains(genre.get())) {
-                    forDeletion.add(film);
-                }
-            });
-
-            listForGenresUpd.removeAll(forDeletion);
-            log.info("выборка популярных фильмов влючает выбранный жанр: " + genreId);
-        }
-
-        return listForGenresUpd;
+        return popularFilms;
     }
 
     public List<Film> getFilmsByDirectors(int directorId, FilmSortBy sortBy) {

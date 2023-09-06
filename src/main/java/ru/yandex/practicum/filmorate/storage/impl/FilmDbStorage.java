@@ -14,6 +14,7 @@ import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -132,7 +133,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getTopMostLikedFilms(int topCount, Integer year) {
+    public List<Film> getTopMostLikedFilms(int topCount, Integer genreId, Integer year) {
         String sql;
 
         String sqlStart = "select " +
@@ -145,62 +146,42 @@ public class FilmDbStorage implements FilmStorage {
                 "r.name_rating," +
                 "r.mpa_id, " +
                 "count(user_id), " +
-                "df.director_id as director_id, " +
-                "d.name_director as name_director " +
-                "from films f  " +
-                "left join likes l on l.film_id = f.id " +
-                "left join rating r on f.rating_id = r.mpa_id " +
-                "left join director_films df on f.id = df.film_id " +
-                "left join director d on df.director_id = d.id ";
-        String sqlFinish =
-                "group by f.id " +
-                        "order by count(user_id) " +
-                        "desc limit ?;";
-        if (year != null) {
-            String sqlHaveRequiredYear = "where EXTRACT (year FROM CAST (f.release_date AS date))  = ?";
-            sql = String.join(" ", sqlStart, sqlHaveRequiredYear, sqlFinish);
-            log.info("выборка популярных фильмов влючает выбранный год: " + year);
-            return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmWithDirector(rs), year, topCount);
-        } else {
-            sql = String.join(" ", sqlStart, sqlFinish);
-            return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmWithDirector(rs), topCount);
-        }
-    }
-
-    @Override
-    public List<Film> getTopMostLikedFilms(int topCount, Integer year) {
-        String sql;
-
-        String sqlStart = "select " +
-                "f.id," +
-                "f.rating_id," +
-                "f.name," +
-                "f.description," +
-                "f.release_date," +
-                "f.duration," +
-                "r.name_rating," +
-                "r.mpa_id, " +
-                "count(user_id) " +
 
                 "from films f  " +
 
                 "left join likes l on l.film_id = f.id " +
-                "left join  rating r on f.rating_id = r.mpa_id";
+                "left join rating r on f.rating_id = r.mpa_id ";
         String sqlFinish =
                 "group by f.id " +
                         "order by count(user_id) " +
-                        "desc limit ?;";
+                        "desc limit " + topCount + ";";
+        sql = String.join(" ", sqlStart, sqlFinish);
 
-        if (year != null) {
-            String sqlHaveRequiredYear = "where EXTRACT (year FROM CAST (f.release_date AS date))  = ?";
-            sql = String.join(" ", sqlStart, sqlHaveRequiredYear, sqlFinish);
+        if (genreId != null || year != null) {
+            String sqlWhere = "where";
 
-            return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), year, topCount);
+            String newSql = String.join(" ", sqlStart, sqlWhere);
 
-        } else {
-            sql = String.join(" ", sqlStart, sqlFinish);
-            return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), topCount);
+            String sqlHaveRequiredGenreId = "f.id in (select film_id from genre_films where genre_id = " + genreId + ")";
+            String sqlHaveRequiredYear = "EXTRACT (year FROM CAST (f.release_date AS date)) = " + year;
+
+            if (genreId != null && year != null) {
+                String sqlAnd = "and";
+                sql = String.join(" ", newSql, sqlHaveRequiredGenreId, sqlAnd, sqlHaveRequiredYear, sqlFinish);
+                log.info("выборка популярных фильмов влючает выбранный жанр: " + genreId + " и год: " + year);
+
+            } else if (genreId != null) {
+                sql = String.join(" ", newSql, sqlHaveRequiredGenreId, sqlFinish);
+                log.info("выборка популярных фильмов влючает выбранный жанр: " + genreId);
+
+            } else {
+                sql = String.join(" ", newSql, sqlHaveRequiredYear, sqlFinish);
+                log.info("выборка популярных фильмов влючает выбранный год: " + year);
+
+            }
         }
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs));
     }
 
     @Override
@@ -328,25 +309,6 @@ public class FilmDbStorage implements FilmStorage {
         film.setReleaseDate(rs.getDate("release_date").toLocalDate());
         film.setMpa(new Mpa(rs.getInt("mpa_id"), rs.getString("name_rating")));
         film.setDirectors(new HashSet<>());
-        return film;
-    }
-
-    private Film makeFilmWithDirector(ResultSet rs) throws SQLException {
-        Film film = new Film();
-        film.setId(rs.getInt("id"));
-        film.setDescription(rs.getString("description"));
-        film.setName(rs.getString("name"));
-        film.setDuration(rs.getDouble("duration"));
-        film.setReleaseDate(rs.getDate("release_date").toLocalDate());
-        film.setMpa(new Mpa(rs.getInt("mpa_id"), rs.getString("name_rating")));
-        Director director = new Director(rs.getInt("director_id"), rs.getString("name_director"));
-        if (director.getId() != 0) {
-            Set<Director> directors = new HashSet<>();
-            directors.add(director);
-            film.setDirectors(directors);
-        } else {
-            film.setDirectors(new HashSet<>());
-        }
         return film;
     }
 
