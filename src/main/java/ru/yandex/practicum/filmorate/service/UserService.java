@@ -5,20 +5,22 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+
 import java.util.List;
 
 @Service
 public class UserService {
-private final UserStorage userStorage; //поле куда будет передано хранилище через контструктор с помощью зависимостей
+    private final UserStorage userStorage; //поле куда будет передано хранилище через контструктор с помощью зависимостей
+    private final EventStorage eventStorage;
 
     //связали зависимостью  сервис и хранилище
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(UserStorage userStorage, EventStorage eventStorage) {
         this.userStorage = userStorage;
+        this.eventStorage = eventStorage;
     }
-
-
 
     public void addFriend(int id, int friendId) {
         userStorage.getUserById(id).orElseThrow(() -> new EntityNotFoundException("Пользователи или пользователь не найдены"));
@@ -38,8 +40,8 @@ private final UserStorage userStorage; //поле куда будет перед
     }
 
     public List<User> getUserFriends(int id) {
-       userStorage.getUserById(id).orElseThrow(() -> new EntityNotFoundException("Юзер не найден в базе"));
-       return userStorage.getUserFriends(id);
+        userStorage.getUserById(id).orElseThrow(() -> new EntityNotFoundException("Юзер не найден в базе"));
+        return userStorage.getUserFriends(id);
     }
 
 
@@ -64,12 +66,12 @@ private final UserStorage userStorage; //поле куда будет перед
     }
 
     public User getUserById(int id) {
-        return userStorage.getUserById(id).orElseThrow(() -> new  EntityNotFoundException("пользователь не найден!"));
+        return userStorage.getUserById(id).orElseThrow(() -> new EntityNotFoundException("пользователь не найден!"));
     }
 
-    public List<Event> getFeedById(int id) {
-        userStorage.getUserById(id).orElseThrow(() -> new  EntityNotFoundException("пользователь не найден!"));
-        return userStorage.getFeedById(id);
+    public List<Event> getFeedByUserId(int id) {
+        userStorage.getUserById(id).orElseThrow(() -> new EntityNotFoundException("пользователь не найден!"));
+        return eventStorage.getFeedByUserId(id);
     }
 
     private void nameValidationAndSetName(User usr) {
