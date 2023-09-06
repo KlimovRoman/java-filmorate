@@ -40,7 +40,9 @@ public class FilmService {
         genreStorage.gernesBatchInsert(genres, filmAfterAdd.getId());
 
         Set<Director> directors = filmAfterAdd.getDirectors();
-        directorStorage.directorBatchInsert(directors, filmAfterAdd.getId());
+        if (directors != null) {
+            directorStorage.directorBatchInsert(directors, filmAfterAdd.getId());
+        }
 
         return filmAfterAdd;
     }
@@ -55,7 +57,9 @@ public class FilmService {
 
         directorStorage.delAllDirectorsFromFilm(filmAfterUpd.getId());
         Set<Director> directors = filmAfterUpd.getDirectors();
-        directorStorage.directorBatchInsert(directors, filmAfterUpd.getId());
+        if (directors != null) {
+            directorStorage.directorBatchInsert(directors, filmAfterUpd.getId());
+        }
 
         return filmAfterUpd;
     }
