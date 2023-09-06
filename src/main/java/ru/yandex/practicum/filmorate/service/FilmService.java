@@ -5,15 +5,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -22,7 +22,7 @@ public class FilmService {
     private final GenreStorage genreStorage;
     private final DirectorStorage directorStorage;
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private final LocalDate dateForCompare =  LocalDate.parse("1895-12-28",formatter);
+    private final LocalDate dateForCompare = LocalDate.parse("1895-12-28", formatter);
 
     //связали зависимостью  сервис и хранилище
     @Autowired
@@ -35,7 +35,7 @@ public class FilmService {
     public Film addFilm(Film filmToAdd) {
         releaseDateValid(filmToAdd);
         Film filmAfterAdd = filmStorage.addFilm(filmToAdd);
-        LinkedHashSet<Genre> genres =  filmAfterAdd.getGenres();
+        LinkedHashSet<Genre> genres = filmAfterAdd.getGenres();
         //инсертим жанры одним батчом
         genreStorage.gernesBatchInsert(genres, filmAfterAdd.getId());
 
@@ -49,7 +49,7 @@ public class FilmService {
         releaseDateValid(filmToUpd);
         Film filmAfterUpd = filmStorage.updFilm(filmToUpd);
         genreStorage.delAllGenresFromFilm(filmAfterUpd.getId());//удаляем жанры чтобы потом записать новые
-        LinkedHashSet<Genre> genres =  filmAfterUpd.getGenres();
+        LinkedHashSet<Genre> genres = filmAfterUpd.getGenres();
         //инсертим жанры одним батчом
         genreStorage.gernesBatchInsert(genres, filmAfterUpd.getId());
 
@@ -61,7 +61,7 @@ public class FilmService {
     }
 
     public List<Film> getFilms() {
-        List<Film> tempFilms =  filmStorage.getFilms();
+        List<Film> tempFilms = filmStorage.getFilms();
         genreStorage.loadGenresForFilm(tempFilms); //обогатили фильмы жанрами
         directorStorage.loadDirectorsForFilm(tempFilms);//обогатили фильмы директорами
         return tempFilms;
@@ -74,7 +74,7 @@ public class FilmService {
 
     public List<Film> getCommonFilms(int userId, int friendId) {
         //реализация фичи в рамках ГП (12 спринт)
-        List<Film> tempFilms =  filmStorage.getCommonFilms(userId, friendId);
+        List<Film> tempFilms = filmStorage.getCommonFilms(userId, friendId);
         genreStorage.loadGenresForFilm(tempFilms); //обогатили фильмы жанрами
         return tempFilms;
     }
@@ -88,27 +88,43 @@ public class FilmService {
     }
 
     public Film getFilmById(int id) {
-       Film film =  filmStorage.getFilmById(id).orElseThrow(() -> new EntityNotFoundException("Фильм не найден в базе"));
-       genreStorage.loadGenresForFilm(List.of(film));
-       directorStorage.loadDirectorsForFilm(List.of(film));
-       return film;
+        Film film = filmStorage.getFilmById(id).orElseThrow(() -> new EntityNotFoundException("Фильм не найден в базе"));
+        genreStorage.loadGenresForFilm(List.of(film));
+        directorStorage.loadDirectorsForFilm(List.of(film));
+        return film;
     }
 
-    public List<Film> getTopMostLikedFilms(int topCount) {
-        List<Film> listForGenresUpd = filmStorage.getTopMostLikedFilms(topCount);
+    public List<Film> getTopMostLikedFilms(int topCount, Integer genreId, Integer year) {
+        List<Film> listForGenresUpd = filmStorage.getTopMostLikedFilms(topCount, year);
         genreStorage.loadGenresForFilm(listForGenresUpd);
-        directorStorage.loadDirectorsForFilm(listForGenresUpd);
+
+        List<Film> forDeletion = new ArrayList<>();
+        if (!listForGenresUpd.isEmpty() && genreId != null) {
+
+            listForGenresUpd.forEach(film -> {
+                Set<Genre> genres = film.getGenres();
+                Optional<Genre> genre = genreStorage.getGenreById(genreId);
+
+                if (genres.isEmpty() || !genres.contains(genre.get())) {
+                    forDeletion.add(film);
+                }
+            });
+
+            listForGenresUpd.removeAll(forDeletion);
+            log.info("выборка популярных фильмов влючает выбранный жанр: " + genreId);
+        }
+
         return listForGenresUpd;
     }
 
-    public List<Film> getFilmsByDirectors(int directorId, String sortBy) {
+    public List<Film> getFilmsByDirectors(int directorId, FilmSortBy sortBy) {
         List<Film> filmsList;
         if (!directorStorage.contains(directorId)) {
             throw new EntityNotFoundException("отсутствует директора с id - " + directorId);
         }
-        if (sortBy.equals("year")) {
+        if (sortBy.equals(FilmSortBy.year)) {
             filmsList = filmStorage.getFilmsByDirectors(directorId, "release_date");
-        } else if (sortBy.equals("likes")) {
+        } else if (sortBy.equals(FilmSortBy.likes)) {
             filmsList = filmStorage.getFilmsByDirectors(directorId, "total_likes");
         } else {
             throw new ValidationException("запрос на сортировку не верен, sortBy - " + sortBy);
@@ -122,7 +138,8 @@ public class FilmService {
     }
 
     public List<Film> getFilmsBySearch(String query, String[] by) {
-        List<Film> filmsFound = filmStorage.getFilmsBySearch(query, by);
+        List<FilmSearchBy> searchBy = Arrays.stream(by).map(FilmSearchBy::valueOf).collect(Collectors.toList());
+        List<Film> filmsFound = filmStorage.getFilmsBySearch(query, searchBy);
         genreStorage.loadGenresForFilm(filmsFound);
         directorStorage.loadDirectorsForFilm(filmsFound);
         return filmsFound;
