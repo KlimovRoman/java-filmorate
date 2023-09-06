@@ -27,6 +27,8 @@ public interface FilmStorage {
 
     public void delFilmById(int filmId);
 
+    List<Film> getTopMostLikedFilms(int topCount);
+
     List<Integer> getRecommendedFilmsID(Integer userId);
 
     List<Film> getRecommendedFilms(List<Integer> recommendedFilmsId);

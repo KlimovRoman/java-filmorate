@@ -41,7 +41,7 @@ public class FilmDbStorage implements FilmStorage {
             "ORDER BY COUNT(FILM_ID IN (SELECT FILM_ID FROM LIKES WHERE USER_ID = ?)) DESC " +
             "LIMIT 10";
     private final EventStorage eventStorage;
-    
+
     @Autowired
     public FilmDbStorage(JdbcTemplate jdbcTemplate, EventStorage eventStorage) {
         this.jdbcTemplate = jdbcTemplate;
@@ -102,11 +102,9 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public void addLike(int filmId, int userLikeId) {
         if (!isContainsLike(filmId, userLikeId)) {
-
             String sqlQuery = "insert into likes(film_id, user_id) " +
                     "values (?, ?)";
             jdbcTemplate.update(sqlQuery, filmId, userLikeId);
-
         }
         Event event = Event.builder()
                 .userId(userLikeId)
@@ -154,9 +152,7 @@ public class FilmDbStorage implements FilmStorage {
                 "count(user_id), " +
                 "df.director_id as director_id, " +
                 "d.name_director as name_director " +
-
                 "from films f  " +
-
                 "left join likes l on l.film_id = f.id " +
                 "left join rating r on f.rating_id = r.mpa_id " +
                 "left join director_films df on f.id = df.film_id " +
@@ -165,14 +161,11 @@ public class FilmDbStorage implements FilmStorage {
                 "group by f.id " +
                         "order by count(user_id) " +
                         "desc limit ?;";
-
         if (year != null) {
             String sqlHaveRequiredYear = "where EXTRACT (year FROM CAST (f.release_date AS date))  = ?";
             sql = String.join(" ", sqlStart, sqlHaveRequiredYear, sqlFinish);
-
             log.info("выборка популярных фильмов влючает выбранный год: " + year);
             return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmWithDirector(rs), year, topCount);
-
         } else {
             sql = String.join(" ", sqlStart, sqlFinish);
             return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmWithDirector(rs), topCount);
@@ -180,43 +173,15 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Map<Integer, List<Integer>> getAllLikedFilms() {
-        Map<Integer, List<Integer>> allLikedFilms = new HashMap<>();
-        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(SELECT_ALL_LIKED_FILMS_ID);
-        while (rowSet.next()) {
-            Integer userId = Integer.parseInt(Objects.requireNonNull(rowSet.getString("user_id")));
-            Integer filmId = Integer.parseInt(Objects.requireNonNull(rowSet.getString("film_id")));
-            allLikedFilms.computeIfAbsent(userId, key -> new ArrayList<>()).add(filmId);
-        }
-        return allLikedFilms;
-    }
-
-    @Override
-    public List<Film> getRecommendedFilms(List<Integer> recommendedFilmsId) {
-        int length = recommendedFilmsId.size();
-        StringBuilder rangeId = new StringBuilder();
-        if (length == 0) {
-            rangeId.append(")");
-            log.debug("Recommended film list is empty");
-        }
-        for (int i = 0; i < length; i++) {
-            if (i != length - 1) {
-                rangeId.append(recommendedFilmsId.get(i));
-                rangeId.append(", ");
-            } else {
-                rangeId.append(recommendedFilmsId.get(i));
-                rangeId.append(")");
-            }
-            log.debug("Recommended film list consists " + (length - 1) + " films");
-        }
-        return jdbcTemplate.queryForStream(SELECT_RECOMMENDED_FILMS + rangeId,
-                (rs, rowNum) -> makeFilm(rs)).collect(Collectors.toList());
+    public List<Film> getTopMostLikedFilms(int topCount) {
+        String sql = "select f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id, count(user_id) from films f  left join likes l on l.film_id = f.id left join  rating r on f.rating_id = r.mpa_id group by f.id,f.rating_id,f.name,f.description,f.release_date,f.duration,r.name_rating,r.mpa_id order by count(user_id) desc limit ?";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs),topCount);
     }
 
     @Override
     public List<Integer> getRecommendedFilmsID(Integer userId) {
-        return new ArrayList<>(jdbcTemplate.queryForList
-                (SELECT_RECOMMENDED_FILMS_ID, Integer.class, userId, userId, userId));
+        return new ArrayList<>(jdbcTemplate.queryForList(SELECT_RECOMMENDED_FILMS_ID, Integer.class,
+                userId, userId, userId));
     }
 
     @Override
@@ -323,7 +288,6 @@ public class FilmDbStorage implements FilmStorage {
     private boolean isContainsLike(int filmId, int userId) {
         String sql = "select film_id from likes where film_id = ? and user_id =?";
         SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, filmId, userId);
-
         if (sqlRowSet.next()) {
             return true;
         }
@@ -350,7 +314,6 @@ public class FilmDbStorage implements FilmStorage {
         film.setDuration(rs.getDouble("duration"));
         film.setReleaseDate(rs.getDate("release_date").toLocalDate());
         film.setMpa(new Mpa(rs.getInt("mpa_id"), rs.getString("name_rating")));
-
         Director director = new Director(rs.getInt("director_id"), rs.getString("name_director"));
         if (director.getId() != 0) {
             Set<Director> directors = new HashSet<>();
@@ -359,7 +322,6 @@ public class FilmDbStorage implements FilmStorage {
         } else {
             film.setDirectors(new HashSet<>());
         }
-
         return film;
     }
 
