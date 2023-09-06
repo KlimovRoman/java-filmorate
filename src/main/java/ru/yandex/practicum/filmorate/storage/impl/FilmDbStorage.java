@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.impl;
 
+import ru.yandex.practicum.filmorate.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
@@ -12,10 +13,6 @@ import ru.yandex.practicum.filmorate.constant.EventType;
 import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Event;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
@@ -266,16 +263,16 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getFilmsBySearch(String query, String[] by) {
+    public List<Film> getFilmsBySearch(String query, List<FilmSearchBy> by) {
         String fullSort = "";
-        for (String sortPart : by) {
+        for (FilmSearchBy sortPart : by) {
             if (!fullSort.isBlank()) {
                 fullSort = fullSort + " or ";
             }
-            if (sortPart.equals("director")) {
+            if (sortPart.equals(FilmSearchBy.director)) {
                 fullSort = fullSort + " f.id in (select df.film_id from director_films as df join director as d" +
                         " on df.director_id = d.id where lower(d.name_director) like '%" + query.toLowerCase() + "%') ";
-            } else if (sortPart.equals("title")) {
+            } else if (sortPart.equals(FilmSearchBy.title)) {
                 fullSort = fullSort + " lower(f.name) like '%" + query.toLowerCase() + "%' ";
             } else {
                 throw new ValidationException("часть запроса by ошибочна - " + sortPart);

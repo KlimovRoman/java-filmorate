@@ -5,9 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
@@ -15,6 +13,7 @@ import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -118,14 +117,14 @@ public class FilmService {
         return listForGenresUpd;
     }
 
-    public List<Film> getFilmsByDirectors(int directorId, String sortBy) {
+    public List<Film> getFilmsByDirectors(int directorId, FilmSortBy sortBy) {
         List<Film> filmsList;
         if (!directorStorage.contains(directorId)) {
             throw new EntityNotFoundException("отсутствует директора с id - " + directorId);
         }
-        if (sortBy.equals("year")) {
+        if (sortBy.equals(FilmSortBy.year)) {
             filmsList = filmStorage.getFilmsByDirectors(directorId, "release_date");
-        } else if (sortBy.equals("likes")) {
+        } else if (sortBy.equals(FilmSortBy.likes)) {
             filmsList = filmStorage.getFilmsByDirectors(directorId, "total_likes");
         } else {
             throw new ValidationException("запрос на сортировку не верен, sortBy - " + sortBy);
@@ -139,7 +138,8 @@ public class FilmService {
     }
 
     public List<Film> getFilmsBySearch(String query, String[] by) {
-        List<Film> filmsFound = filmStorage.getFilmsBySearch(query, by);
+        List<FilmSearchBy> searchBy = Arrays.stream(by).map(FilmSearchBy::valueOf).collect(Collectors.toList());
+        List<Film> filmsFound = filmStorage.getFilmsBySearch(query, searchBy);
         genreStorage.loadGenresForFilm(filmsFound);
         directorStorage.loadDirectorsForFilm(filmsFound);
         return filmsFound;

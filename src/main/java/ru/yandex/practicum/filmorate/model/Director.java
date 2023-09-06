@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ public class Director {
 
     private int id;
     @NotBlank
+    @Size(max = 200)
     private String name;
 
     public Director(int id, String name) {
