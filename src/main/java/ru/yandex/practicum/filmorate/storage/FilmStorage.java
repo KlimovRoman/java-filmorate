@@ -23,13 +23,11 @@ public interface FilmStorage {
 
     public void delLike(int filmId, int userLikeId);
 
-    public List<Film> getTopMostLikedFilms(int topCount, Integer year);
+    public List<Film> getTopMostLikedFilms(int topCount, Integer genreId, Integer year);
 
     public List<Film> getCommonFilms(int userId, int friendId);
 
     public void delFilmById(int filmId);
-
-    List<Film> getTopMostLikedFilms(int topCount);
 
     List<Integer> getRecommendedFilmsID(Integer userId);
 
