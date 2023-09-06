@@ -54,10 +54,8 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleNegativeInteger(final ConstraintViolationException e) {
+    public ErrorResponse handleConstraintViolationException(final ConstraintViolationException e) {
         log.debug("Получен статус 400 Bad Request {}", e.getMessage(), e);
-        return new ErrorResponse(
-                "Значение не может отрицательным!"
-        );
+        return new ErrorResponse(e.getMessage());
     }
 }
