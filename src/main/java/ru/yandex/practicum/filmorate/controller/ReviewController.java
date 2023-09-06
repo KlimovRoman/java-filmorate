@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
@@ -13,6 +14,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/reviews")
 @RequiredArgsConstructor
+@Validated
 public class ReviewController {
 
     private final ReviewService service;
@@ -37,8 +39,8 @@ public class ReviewController {
         return service.findById(id);
     }
 
-    @GetMapping()
-    public List<Review> findAll(@RequestParam @Positive Optional<Integer> filmId,
+    @GetMapping
+    public List<Review> findAll(@RequestParam Optional<Integer> filmId,
                                 @RequestParam(defaultValue = "10", required = false) @Positive Integer count) {
         return service.findAll(filmId, count);
     }
