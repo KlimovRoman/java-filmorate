@@ -34,9 +34,6 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review create(Review review) {
-        ensureUserExists(review.getUserId());
-        ensureFilmExists(review.getFilmId());
-
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("reviews")
                 .usingGeneratedKeyColumns("id");
@@ -57,9 +54,6 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Optional<Review> update(Review review) {
-        ensureUserExists(review.getUserId());
-        ensureFilmExists(review.getFilmId());
-
         String sqlQuery = "UPDATE REVIEWS SET CONTENT = ?, IS_POSITIVE = ? WHERE ID = ?";
 
         int result = jdbcTemplate.update(sqlQuery, review.getContent(), review.getIsPositive(), review.getReviewId());
@@ -154,26 +148,13 @@ public class ReviewDbStorage implements ReviewStorage {
         return values;
     }
 
-    private void ensureUserExists(int id) {
-        String sqlQuery = "SELECT * FROM USERS WHERE ID = ?";
-        ensureEntityExists(sqlQuery, "Пользователь", id);
-    }
-
-    private void ensureFilmExists(int id) {
-        String sqlQuery = "SELECT * FROM FILMS WHERE ID = ?";
-        ensureEntityExists(sqlQuery, "Фильм", id);
-    }
-
     private void ensureReviewExists(int id) {
         String sqlQuery = "SELECT * FROM REVIEWS WHERE ID = ?";
-        ensureEntityExists(sqlQuery, "Отзыв", id);
-    }
 
-    private void ensureEntityExists(String sqlQuery, String name, int id) {
         SqlRowSet filmRows = jdbcTemplate.queryForRowSet(sqlQuery, id);
 
         if (!filmRows.next()) {
-            String message = "Сущность \"" + name + "\" с идентификатором " + id + " не найдена.";
+            String message = "Сущность Review с идентификатором " + id + " не найдена.";
             log.error(message);
             throw new EntityNotFoundException(message);
         }
