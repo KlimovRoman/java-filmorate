@@ -14,7 +14,6 @@ import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-
 import java.sql.*;
 import java.sql.Date;
 import java.time.Instant;
@@ -26,7 +25,6 @@ import java.util.stream.Collectors;
 @Component
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
-
     private static final String SELECT_RECOMMENDED_FILMS = "SELECT f.*, r.*, " +
             "FROM films f INNER JOIN rating r ON f.rating_id = r.mpa_id " +
             "WHERE f.id IN (";
