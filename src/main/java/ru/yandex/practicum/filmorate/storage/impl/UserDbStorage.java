@@ -13,13 +13,10 @@ import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.sql.*;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
 
@@ -28,13 +25,10 @@ import java.util.*;
 @Component
 public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
-    private final EventStorage eventStorage;
-
 
     @Autowired
-    public UserDbStorage(JdbcTemplate jdbcTemplate, EventStorage eventStorage) {
+    public UserDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.eventStorage = eventStorage;
     }
 
     @Override
@@ -50,7 +44,7 @@ public class UserDbStorage implements UserStorage {
             stmt.setDate(4, Date.valueOf(userToAdd.getBirthday()));
             return stmt;
         }, keyHolder);
-        int newFilmID =  keyHolder.getKey().intValue();
+        int newFilmID = keyHolder.getKey().intValue();
         userToAdd.setId(newFilmID);
         return userToAdd;
     }
@@ -71,11 +65,11 @@ public class UserDbStorage implements UserStorage {
                 "name = ?, login = ?, email = ?, birthday = ? " +
                 "where id = ?";
         int rowUpdCnt = jdbcTemplate.update(sqlQuery,
-                 userToUpd.getName(),
-                 userToUpd.getLogin(),
-                 userToUpd.getEmail(),
-                 Date.valueOf(userToUpd.getBirthday()),
-                 userToUpd.getId());
+                userToUpd.getName(),
+                userToUpd.getLogin(),
+                userToUpd.getEmail(),
+                Date.valueOf(userToUpd.getBirthday()),
+                userToUpd.getId());
         if (rowUpdCnt < 1) {
             throw new EntityNotFoundException("Юзер, который необходимо обновить не найден в базе");
         }
@@ -103,15 +97,15 @@ public class UserDbStorage implements UserStorage {
                 .operation(OperationType.ADD)
                 .eventType(EventType.FRIEND)
                 .build();
-        eventStorage.addEvent(event);
+        addEvent(event);
     }
 
     @Override
     public void delFriend(int userId, int friendId) {
         String sqlQuery = "delete from friendship where user_id = " + userId + " and friend_id = " + friendId;
-        int count =  jdbcTemplate.update(sqlQuery);
+        int count = jdbcTemplate.update(sqlQuery);
         if (count == 0) {
-            throw new  EntityNotFoundException("Юзер не найден в базе(удаление не прошло)");
+            throw new EntityNotFoundException("Юзер не найден в базе(удаление не прошло)");
         }
 
         Event event = Event.builder()
@@ -122,47 +116,35 @@ public class UserDbStorage implements UserStorage {
                 .operation(OperationType.REMOVE)
                 .eventType(EventType.FRIEND)
                 .build();
-        eventStorage.addEvent(event);
+        addEvent(event);
     }
 
     @Override
     public List<User> getUserFriends(int id) {
         String sql = "select * from friendship f left join users u on f.friend_id = u.id where user_id = ?";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs),id);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs), id);
     }
 
 
     @Override
     public List<User> getCommonFriends(int id, int otherId) {
-        List<User> listForReturn = new ArrayList<>();
-        String sql = "select f.FRIEND_ID  \n" +
+        String sql = "select u.id, u.name, u.login, u.email, u.birthday \n" +
                 "from friendship f left join users u on f.friend_id = u.id\n" +
                 "where user_id = " + id + "\n" +
                 "INTERSECT\n" +
-                "select f.FRIEND_ID  \n" +
+                "select u.id, u.name, u.login, u.email, u.birthday \n" +
                 "from friendship f left join users u on f.friend_id = u.id\n" +
                 "where user_id = " + otherId;
-        return  jdbcTemplate.query(sql, (rs, rowNum) -> commonFriendsMapper(rs));
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs));
     }
 
     @Override
     public void delUserById(int userId) {
         String sqlQuery = "DELETE FROM users  WHERE ID = ?";
-        int count =  jdbcTemplate.update(sqlQuery,userId);
+        int count = jdbcTemplate.update(sqlQuery, userId);
         if (count == 0) {
-            throw new  EntityNotFoundException("Юзер не найден в базе (удаление не прошло)");
+            throw new EntityNotFoundException("Юзер не найден в базе (удаление не прошло)");
         }
-    }
-
-    @Override
-    public List<Event> getFeedById(int userId) {
-        String sqlQuery =
-                "select * " +
-                        "from events " +
-                        "where user_id = ? " +
-                        "order by user_id; ";
-        List<Event> events = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> eventStorage.makeEvent(rs), userId);
-        return events;
     }
 
     private User commonFriendsMapper(ResultSet rs) throws SQLException {
@@ -194,5 +176,27 @@ public class UserDbStorage implements UserStorage {
         return user;
     }
 
+    private void addEvent(Event event) {
+        String sqlQueryOnCreateEvent = "insert into events(" +
+                "user_id, " +
+                "entity_id, " +
+                "time, " +
+                "operation_type, " +
+                "event_type) " +
 
+                "values (?, ?, ?, ?, ?)";
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement stmt = connection.prepareStatement(sqlQueryOnCreateEvent, new String[]{"id"});
+
+            stmt.setLong(1, event.getUserId());
+            stmt.setLong(2, event.getEntityId());
+            stmt.setTimestamp(3, Timestamp.from(Instant.ofEpochMilli(event.getTimestamp())));
+            stmt.setString(4, event.getOperation().toString());
+            stmt.setString(5, event.getEventType().toString());
+
+            return stmt;
+        }, keyHolder);
+    }
 }
