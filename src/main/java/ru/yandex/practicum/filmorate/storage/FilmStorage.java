@@ -4,7 +4,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmSearchBy;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public interface FilmStorage {
@@ -30,7 +29,9 @@ public interface FilmStorage {
 
     public void delFilmById(int filmId);
 
-    Map<Integer, List<Integer>> getAllLikedFilms();
+    List<Film> getTopMostLikedFilms(int topCount);
+
+    List<Integer> getRecommendedFilmsID(Integer userId);
 
     List<Film> getRecommendedFilms(List<Integer> recommendedFilmsId);
 }
