@@ -6,17 +6,18 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.constant.EventType;
 import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.storage.EventStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
 @Component
-public class EventStorage implements ru.yandex.practicum.filmorate.storage.EventStorage {
+public class EventDbStorage implements EventStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public EventStorage(JdbcTemplate jdbcTemplate) {
+    public EventDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
