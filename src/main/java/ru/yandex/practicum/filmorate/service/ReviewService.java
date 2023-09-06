@@ -26,7 +26,7 @@ public class ReviewService {
         return reviewStorage.update(review).orElseThrow(() -> new EntityNotFoundException("Отзыв не найден."));
     }
 
-    public void delete(Integer id) throws EntityNotFoundException{
+    public void delete(Integer id) throws EntityNotFoundException {
         Optional<Review> review = reviewStorage.findById(id);
         reviewStorage.delete(review.get());
     }
