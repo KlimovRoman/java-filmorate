@@ -12,10 +12,8 @@ import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.sql.*;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 
 @Slf4j
@@ -42,7 +40,7 @@ public class UserDbStorage implements UserStorage {
             stmt.setDate(4, Date.valueOf(userToAdd.getBirthday()));
             return stmt;
         }, keyHolder);
-        int newFilmID =  keyHolder.getKey().intValue();
+        int newFilmID = keyHolder.getKey().intValue();
         userToAdd.setId(newFilmID);
         return userToAdd;
     }
@@ -55,22 +53,17 @@ public class UserDbStorage implements UserStorage {
         return userMapper(userRows);
     }
 
-
-
     @Override
     public User updUser(User userToUpd) {
         String sqlQuery = "update users set " +
                 "name = ?, login = ?, email = ?, birthday = ? " +
                 "where id = ?";
         int rowUpdCnt = jdbcTemplate.update(sqlQuery,
-                 userToUpd.getName(),
-                 userToUpd.getLogin(),
-                 userToUpd.getEmail(),
-                 Date.valueOf(userToUpd.getBirthday()),
-                 userToUpd.getId());
-        if (rowUpdCnt < 1) {
-            throw new EntityNotFoundException("Юзер, который необходимо обновить не найден в базе");
-        }
+                userToUpd.getName(),
+                userToUpd.getLogin(),
+                userToUpd.getEmail(),
+                Date.valueOf(userToUpd.getBirthday()),
+                userToUpd.getId());
         return userToUpd;
     }
 
@@ -79,7 +72,6 @@ public class UserDbStorage implements UserStorage {
         String sql = "select * from users";
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs));
     }
-
 
     @Override
     public void addFriend(int userId, int friendId) {
@@ -91,30 +83,52 @@ public class UserDbStorage implements UserStorage {
     @Override
     public void delFriend(int userId, int friendId) {
         String sqlQuery = "delete from friendship where user_id = " + userId + " and friend_id = " + friendId;
-        int count =  jdbcTemplate.update(sqlQuery);
-        if (count == 0) {
-            throw new  EntityNotFoundException("Юзер не найден в базе(удаление не прошло)");
-        }
+        int count = jdbcTemplate.update(sqlQuery);
     }
 
     @Override
     public List<User> getUserFriends(int id) {
         String sql = "select * from friendship f left join users u on f.friend_id = u.id where user_id = ?";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs),id);
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs), id);
     }
 
 
     @Override
     public List<User> getCommonFriends(int id, int otherId) {
-        List<User> listForReturn = new ArrayList<>();
-        String sql = "select f.FRIEND_ID  \n" +
+        String sql = "select u.id, u.name, u.login, u.email, u.birthday \n" +
                 "from friendship f left join users u on f.friend_id = u.id\n" +
                 "where user_id = " + id + "\n" +
                 "INTERSECT\n" +
-                "select f.FRIEND_ID  \n" +
+                "select u.id, u.name, u.login, u.email, u.birthday \n" +
                 "from friendship f left join users u on f.friend_id = u.id\n" +
                 "where user_id = " + otherId;
-        return  jdbcTemplate.query(sql, (rs, rowNum) -> commonFriendsMapper(rs));
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs));
+    }
+
+    @Override
+    public void delUserById(int userId) {
+        String sqlQuery = "DELETE FROM users  WHERE ID = ?";
+        int count = jdbcTemplate.update(sqlQuery, userId);
+    }
+
+    @Override
+    public boolean checkIdInDatabase(int id) {
+        /*
+        1. ревьюер рекомендовал подобные методы сделать boolean
+        2. в прошлых реализациях (ensureСущностьExists() / сущностьGetById()) помимо проверки, что сущность есть,
+        происходила ее десериализация, но в вызванных методах -- это лишние операции, по этой причине стоит только
+        проверить ее существование в базе. по этой причине некоторые методы в ReviewService были
+        удалены, так как после обновления перестали использоваться
+        */
+
+        String sql = "select * from users where id = ?";
+        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, id);
+        if (!sqlRowSet.next()) {
+            String message = String.format("Пользователь с id: " + id + " не найден");
+            log.error(message);
+            throw new EntityNotFoundException(message);
+        }
+        return true;
     }
 
     private User commonFriendsMapper(ResultSet rs) throws SQLException {
