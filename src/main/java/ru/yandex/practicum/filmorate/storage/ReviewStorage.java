@@ -11,9 +11,11 @@ public interface ReviewStorage {
 
     Optional<Review> update(Review review);
 
-    void delete(Review review);
+    void delete(int id);
 
     Optional<Review> findById(int id);
 
     List<Review> findAll(Optional<Integer> filmId, int count);
+
+    boolean ensureReviewExists(int id);
 }
