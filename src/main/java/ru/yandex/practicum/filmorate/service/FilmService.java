@@ -1,14 +1,14 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.constant.EventType;
+import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.*;
-import ru.yandex.practicum.filmorate.storage.DirectorStorage;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -17,20 +17,17 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class FilmService {
+    private final UserStorage userStorage;
     private final FilmStorage filmStorage; //поле куда будет передано хранилище через контструктор с помощью зависимостей
     private final GenreStorage genreStorage;
     private final DirectorStorage directorStorage;
+    private final EventStorage eventStorage;
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final LocalDate dateForCompare = LocalDate.parse("1895-12-28", formatter);
 
-    //связали зависимостью  сервис и хранилище
-    @Autowired
-    public FilmService(FilmStorage filmStorage, GenreStorage genreStorage, DirectorStorage directorStorage) {
-        this.filmStorage = filmStorage;
-        this.genreStorage = genreStorage;
-        this.directorStorage = directorStorage;
-    }
+    //связали зависимостью  сервис и хранилище через аннотацию @RequiredArgsConstructor
 
     public Film addFilm(Film filmToAdd) {
         releaseDateValid(filmToAdd);
@@ -49,6 +46,8 @@ public class FilmService {
 
     public Film updFilm(Film filmToUpd) {
         releaseDateValid(filmToUpd);
+        filmStorage.checkIdInDatabase(filmToUpd.getId());
+
         Film filmAfterUpd = filmStorage.updFilm(filmToUpd);
         genreStorage.delAllGenresFromFilm(filmAfterUpd.getId());//удаляем жанры чтобы потом записать новые
         LinkedHashSet<Genre> genres = filmAfterUpd.getGenres();
@@ -73,10 +72,15 @@ public class FilmService {
 
     public void delFilmById(int filmId) {
         //реализация фичи в рамках ГП (12 спринт)
+        filmStorage.checkIdInDatabase(filmId);
+
         filmStorage.delFilmById(filmId);
     }
 
     public List<Film> getCommonFilms(int userId, int friendId) {
+        userStorage.checkIdInDatabase(userId);
+        userStorage.checkIdInDatabase(friendId);
+
         //реализация фичи в рамках ГП (12 спринт)
         List<Film> tempFilms = filmStorage.getCommonFilms(userId, friendId);
         genreStorage.loadGenresForFilm(tempFilms); //обогатили фильмы жанрами
@@ -84,11 +88,19 @@ public class FilmService {
     }
 
     public void addLike(int filmId, int userLikeId) {
+        userStorage.checkIdInDatabase(userLikeId);
+        filmStorage.checkIdInDatabase(filmId);
+
         filmStorage.addLike(filmId, userLikeId);
+        eventStorage.addEvent(userLikeId, filmId, OperationType.ADD, EventType.LIKE);
     }
 
     public void delLike(int filmId, int userLikeId) {
+        userStorage.checkIdInDatabase(userLikeId);
+        filmStorage.checkIdInDatabase(filmId);
+
         filmStorage.delLike(filmId, userLikeId);
+        eventStorage.addEvent(userLikeId, filmId, OperationType.REMOVE, EventType.LIKE);
     }
 
     public Film getFilmById(int id) {

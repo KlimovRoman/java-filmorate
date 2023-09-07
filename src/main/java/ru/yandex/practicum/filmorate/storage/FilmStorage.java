@@ -32,4 +32,6 @@ public interface FilmStorage {
     List<Integer> getRecommendedFilmsID(Integer userId);
 
     List<Film> getRecommendedFilms(List<Integer> recommendedFilmsId);
+
+    boolean checkIdInDatabase(int id);
 }

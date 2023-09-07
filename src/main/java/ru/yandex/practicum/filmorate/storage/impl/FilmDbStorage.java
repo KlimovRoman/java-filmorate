@@ -9,8 +9,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.constant.EventType;
-import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -19,8 +17,6 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.*;
-import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,8 +61,6 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film updFilm(Film filmToUpd) {
-        int filmId = filmToUpd.getId();
-        getFilmById(filmToUpd.getId()).orElseThrow(() -> new EntityNotFoundException("Фильм, который необходимо обновить не найден в базе"));
         String sqlQuery = "update films set " +
                 "rating_id = ?, name = ?, description = ?, release_date = ?, duration = ? " +
                 "where id = ?";
@@ -102,34 +96,12 @@ public class FilmDbStorage implements FilmStorage {
                     "values (?, ?)";
             jdbcTemplate.update(sqlQuery, filmId, userLikeId);
         }
-        Event event = Event.builder()
-                .userId(userLikeId)
-                .entityFilmId(filmId)
-                .entityId(filmId)
-                .timestamp(Instant.now().toEpochMilli())
-                .operation(OperationType.ADD)
-                .eventType(EventType.LIKE)
-                .build();
-        addEvent(event);
     }
 
     @Override
     public void delLike(int filmId, int userLikeId) {
         String sqlQuery = "delete from likes where film_id = " + filmId + " and user_id = " + userLikeId;
         int count = jdbcTemplate.update(sqlQuery);
-        if (count == 0) {
-            throw new EntityNotFoundException("Фильм не найден в базе");
-        }
-
-        Event event = Event.builder()
-                .userId(userLikeId)
-                .entityFilmId(filmId)
-                .entityId(filmId)
-                .timestamp(Instant.now().toEpochMilli())
-                .operation(OperationType.REMOVE)
-                .eventType(EventType.LIKE)
-                .build();
-        addEvent(event);
     }
 
     @Override
@@ -251,9 +223,6 @@ public class FilmDbStorage implements FilmStorage {
     public void delFilmById(int filmId) {
         String sqlQuery = "DELETE FROM films  WHERE ID = ?";
         int count = jdbcTemplate.update(sqlQuery, filmId);
-        if (count == 0) {
-            throw new EntityNotFoundException("Фильм не найден в базе (удаление не прошло)");
-        }
     }
 
     @Override
@@ -291,6 +260,26 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs));
     }
 
+    @Override
+    public boolean checkIdInDatabase(int id) {
+        /*
+        1. ревьюер рекомендовал подобные методы сделать boolean
+        2. в прошлых реализациях (ensureСущностьExists() / сущностьGetById()) помимо проверки, что сущность есть,
+        происходила ее десериализация, но в вызванных методах -- это лишние операции, по этой причине стоит только
+        проверить ее существование в базе. по этой причине некоторые методы в ReviewService были
+        удалены, так как после обновления перестали использоваться
+        */
+
+        String sql = "select * from films where id = ?";
+        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, id);
+        if (!sqlRowSet.next()) {
+            String message = String.format("Фильм с id: " + id + " не найден");
+            log.error(message);
+            throw new EntityNotFoundException(message);
+        }
+        return true;
+    }
+
     private boolean isContainsLike(int filmId, int userId) {
         String sql = "select film_id from likes where film_id = ? and user_id =?";
         SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, filmId, userId);
@@ -326,29 +315,5 @@ public class FilmDbStorage implements FilmStorage {
         } else {
             return Optional.empty();
         }
-    }
-
-    private void addEvent(Event event) {
-        String sqlQueryOnCreateEvent = "insert into events(" +
-                "user_id, " +
-                "entity_id, " +
-                "time, " +
-                "operation_type, " +
-                "event_type) " +
-
-                "values (?, ?, ?, ?, ?)";
-
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(connection -> {
-            PreparedStatement stmt = connection.prepareStatement(sqlQueryOnCreateEvent, new String[]{"id"});
-
-            stmt.setLong(1, event.getUserId());
-            stmt.setLong(2, event.getEntityId());
-            stmt.setTimestamp(3, Timestamp.from(Instant.ofEpochMilli(event.getTimestamp())));
-            stmt.setString(4, event.getOperation().toString());
-            stmt.setString(5, event.getEventType().toString());
-
-            return stmt;
-        }, keyHolder);
     }
 }

@@ -8,16 +8,12 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.constant.EventType;
-import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
-import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.sql.*;
 import java.sql.Date;
-import java.time.Instant;
 import java.util.*;
 
 @Slf4j
@@ -57,8 +53,6 @@ public class UserDbStorage implements UserStorage {
         return userMapper(userRows);
     }
 
-
-
     @Override
     public User updUser(User userToUpd) {
         String sqlQuery = "update users set " +
@@ -70,9 +64,6 @@ public class UserDbStorage implements UserStorage {
                 userToUpd.getEmail(),
                 Date.valueOf(userToUpd.getBirthday()),
                 userToUpd.getId());
-        if (rowUpdCnt < 1) {
-            throw new EntityNotFoundException("Юзер, который необходимо обновить не найден в базе");
-        }
         return userToUpd;
     }
 
@@ -82,41 +73,17 @@ public class UserDbStorage implements UserStorage {
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs));
     }
 
-
     @Override
     public void addFriend(int userId, int friendId) {
         String sqlQuery = "insert into friendship(user_id, friend_id) " +
                 "values (?, ?)";
         jdbcTemplate.update(sqlQuery, userId, friendId);
-
-        Event event = Event.builder()
-                .userId(userId)
-                .entityUserId(friendId)
-                .entityId(friendId)
-                .timestamp(Instant.now().toEpochMilli())
-                .operation(OperationType.ADD)
-                .eventType(EventType.FRIEND)
-                .build();
-        addEvent(event);
     }
 
     @Override
     public void delFriend(int userId, int friendId) {
         String sqlQuery = "delete from friendship where user_id = " + userId + " and friend_id = " + friendId;
         int count = jdbcTemplate.update(sqlQuery);
-        if (count == 0) {
-            throw new EntityNotFoundException("Юзер не найден в базе(удаление не прошло)");
-        }
-
-        Event event = Event.builder()
-                .userId(userId)
-                .entityUserId(friendId)
-                .entityId(friendId)
-                .timestamp(Instant.now().toEpochMilli())
-                .operation(OperationType.REMOVE)
-                .eventType(EventType.FRIEND)
-                .build();
-        addEvent(event);
     }
 
     @Override
@@ -142,9 +109,26 @@ public class UserDbStorage implements UserStorage {
     public void delUserById(int userId) {
         String sqlQuery = "DELETE FROM users  WHERE ID = ?";
         int count = jdbcTemplate.update(sqlQuery, userId);
-        if (count == 0) {
-            throw new EntityNotFoundException("Юзер не найден в базе (удаление не прошло)");
+    }
+
+    @Override
+    public boolean checkIdInDatabase(int id) {
+        /*
+        1. ревьюер рекомендовал подобные методы сделать boolean
+        2. в прошлых реализациях (ensureСущностьExists() / сущностьGetById()) помимо проверки, что сущность есть,
+        происходила ее десериализация, но в вызванных методах -- это лишние операции, по этой причине стоит только
+        проверить ее существование в базе. по этой причине некоторые методы в ReviewService были
+        удалены, так как после обновления перестали использоваться
+        */
+
+        String sql = "select * from users where id = ?";
+        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, id);
+        if (!sqlRowSet.next()) {
+            String message = String.format("Пользователь с id: " + id + " не найден");
+            log.error(message);
+            throw new EntityNotFoundException(message);
         }
+        return true;
     }
 
     private User commonFriendsMapper(ResultSet rs) throws SQLException {
@@ -174,29 +158,5 @@ public class UserDbStorage implements UserStorage {
         user.setEmail(rs.getString("email"));
         user.setBirthday(rs.getDate("birthday").toLocalDate());
         return user;
-    }
-
-    private void addEvent(Event event) {
-        String sqlQueryOnCreateEvent = "insert into events(" +
-                "user_id, " +
-                "entity_id, " +
-                "time, " +
-                "operation_type, " +
-                "event_type) " +
-
-                "values (?, ?, ?, ?, ?)";
-
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(connection -> {
-            PreparedStatement stmt = connection.prepareStatement(sqlQueryOnCreateEvent, new String[]{"id"});
-
-            stmt.setLong(1, event.getUserId());
-            stmt.setLong(2, event.getEntityId());
-            stmt.setTimestamp(3, Timestamp.from(Instant.ofEpochMilli(event.getTimestamp())));
-            stmt.setString(4, event.getOperation().toString());
-            stmt.setString(5, event.getEventType().toString());
-
-            return stmt;
-        }, keyHolder);
     }
 }

@@ -2,14 +2,19 @@ package ru.yandex.practicum.filmorate.storage.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.constant.EventType;
 import ru.yandex.practicum.filmorate.constant.OperationType;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 
 @Component
@@ -19,6 +24,31 @@ public class EventDbStorage implements EventStorage {
     @Autowired
     public EventDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @Override
+    public void addEvent(int userId, int selectedEntityId, OperationType operationType, EventType eventType) {
+        String sqlQueryOnCreateEvent = "insert into events(" +
+                "user_id, " +
+                "entity_id, " +
+                "time, " +
+                "operation_type, " +
+                "event_type) " +
+
+                "values (?, ?, ?, ?, ?)";
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement stmt = connection.prepareStatement(sqlQueryOnCreateEvent, new String[]{"id"});
+
+            stmt.setLong(1, userId);
+            stmt.setLong(2, selectedEntityId);
+            stmt.setTimestamp(3, Timestamp.from(Instant.now()));
+            stmt.setString(4, operationType.toString());
+            stmt.setString(5, eventType.toString());
+
+            return stmt;
+        }, keyHolder);
     }
 
     @Override

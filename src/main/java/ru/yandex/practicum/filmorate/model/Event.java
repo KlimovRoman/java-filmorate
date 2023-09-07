@@ -9,10 +9,10 @@ import ru.yandex.practicum.filmorate.constant.OperationType;
 @Builder
 public class Event {
     private int eventId;
+
     private int userId;
 
     private int entityId;
-
     private int entityUserId;
     private int entityFilmId;
     private int entityReviewId;
