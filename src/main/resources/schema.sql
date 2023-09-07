@@ -94,5 +94,6 @@ create TABLE IF NOT EXISTS like_review
 (
     review_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
-    is_positive BOOLEAN NOT NULL
+    is_positive INTEGER NOT NULL,
+    CONSTRAINT pk_review_id_user_id PRIMARY KEY (review_id, user_id)
 );
